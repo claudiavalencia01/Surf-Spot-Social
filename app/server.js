@@ -39,12 +39,52 @@ function validateBody(body, requiredFields){
     return true;
 }
 
+function validateUsername(username) {
+    return /^[a-zA-Z0-9]{3,20}$/.test(username);
+}
+
+function validatePassword(password) {
+    return password.length >= 6;
+}
+
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 // Create Account
 app.post("/create", async(req, res) => {
     let { first_name, last_name, username, email, password } = req.body;
 
     if (!validateBody(req.body, ["first_name", "last_name", "username", "email", "password"])) {
         return res.status(400).send("Missing required fields");
+    }
+
+    if (!validateUsername(username)) {
+        return res.status(400).send("Username must 3-20 alphanumeric characters");
+    }
+
+    if (!validatePassword(password)) {
+        return res.status(400).send("Password must be at least 6 characters");
+    }
+
+    if (!validateEmail(email)) {
+        return res.status(400).send("Invalid email format");
+    }
+
+    // Check if username or email already exists
+    let exists;
+    try {
+        exists = await pool.query(
+            "SELECT * FROM users WHERE username=$1 OR email=$2",
+            [username, email]
+        );
+    } catch (error) {
+        console.error("SELECT failed:", error);
+        return res.sendStatus(500);
+    }
+
+    if (exists.rows.length > 0) {
+        return res.status(400).send("Username or email already exists");
     }
 
     // Hash password
