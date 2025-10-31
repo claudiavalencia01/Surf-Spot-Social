@@ -115,6 +115,44 @@ app.post("/login", async (req, res) => {
     res.cookie("token", token, cookieOptions).status(200).send("Logged in successfully");
 });
 
+// Authorization middleware
+let authorize = (req, res, next) => {
+    let { token } = req.cookies;
+    if (!token || !tokenStorage.hasOwnProperty(token)) {
+        return res.sendStatus(403);
+    }
+    next();
+};
+
+// Logout
+app.post("/logout", (req, res) => {
+    let { token } = req.cookies;
+
+    if (token === undefined) {
+        console.log("Already logged out");
+        return res.sendStatus(400);
+    }
+
+
+    if (!tokenStorage.hasOwnProperty(token)) {
+        console.log("Token doesn't exist");
+        return res.sendStatus(400);
+    }
+
+    delete tokenStorage[token];
+    res.clearCookie("token", cookieOptions).send("Logged out successfully");
+});
+
+// Serves content for any user
+app.get("/public", (req, res) => {
+    return res.send("A public message\n");
+});
+
+// Serves content for logged in users
+app.get("/private", authorize, (req, res) => {
+    return res.send("A private message\n");
+});
+
 app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}`);
 });
