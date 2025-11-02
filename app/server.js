@@ -37,9 +37,9 @@ app.get("/register", (req, res) => {
 });
 
 //  same for login page route:
-//app.get("/login", (req, res) => {
-  //res.sendFile(path.join(__dirname, "../public/login.html"));
-//});
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/login.html"));
+});
 
 // Cookie settings
 let cookieOptions = {
@@ -70,7 +70,7 @@ function validateEmail(email) {
 }
 
 // Create Account
-app.post("/create", async(req, res) => {
+app.post("/create", async (req, res) => {
     let { first_name, last_name, username, email, password } = req.body;
 
     if (!validateBody(req.body, ["first_name", "last_name", "username", "email", "password"])) {
@@ -126,11 +126,9 @@ app.post("/create", async(req, res) => {
         return res.sendStatus(500);
     }
 
-    // Auto-login after creating account
-    let token = makeToken();
-    tokenStorage[token] = username;
-    res.cookie("token", token, cookieOptions).status(200).send("User created and logged in");
-});
+    // Successful registration — prompt user to log in next
+    res.status(200).send("User created successfully. Please log in.");
+}); // ✅ closed the /create route properly
 
 // Login
 app.post("/login", async (req, res) => {
@@ -190,7 +188,6 @@ app.post("/logout", (req, res) => {
         console.log("Already logged out");
         return res.sendStatus(400);
     }
-
 
     if (!tokenStorage.hasOwnProperty(token)) {
         console.log("Token doesn't exist");

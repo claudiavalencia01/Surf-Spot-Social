@@ -19,12 +19,12 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     });
 
     const text = await response.text();
-
-    if (response.ok) {
-      msg.textContent = "Account created! Redirecting...";
-      msg.className = "text-center text-green-600 mt-3";
-      setTimeout(() => (window.location.href = "/"), 1500);
-    } else {
+   
+  if (response.ok) {
+  msg.textContent = "Account created! Redirecting to login...";
+  msg.className = "text-center text-green-600 mt-3";
+  setTimeout(() => (window.location.href = "/login.html"), 1500);
+  }else {
       msg.textContent = text || "Failed to create account.";
       msg.className = "text-center text-red-600 mt-3";
     }
