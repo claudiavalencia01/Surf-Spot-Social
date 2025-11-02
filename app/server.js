@@ -1,4 +1,5 @@
 let express = require("express");
+const path = require("path");
 let { Pool } = require("pg");
 let argon2 = require("argon2");
 let cookieParser = require("cookie-parser");
@@ -30,6 +31,15 @@ pool.connect().then(() => {
 function makeToken() {
     return crypto.randomBytes(32).toString("hex");
 }
+// this new route for register page:
+app.get("/register", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/register.html"));
+});
+
+//  same for login page route:
+//app.get("/login", (req, res) => {
+  //res.sendFile(path.join(__dirname, "../public/login.html"));
+//});
 
 // Cookie settings
 let cookieOptions = {
