@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Surf Spot Social</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+ 
+  <!-- Tailwind CDN for now -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- NAV / TABS -->
+  <header class="border-b bg-white">
+    <div class="max-w-6xl mx-auto flex items-center justify-between h-14 px-4">
+      <!-- logo -->
+      <div class="flex items-center gap-2">
+        <span class="font-semibold tracking-wide uppercase">SURFSPOT</span>
+      </div>
+
+      <!-- tabs -->
+      <nav class="flex items-center gap-6 text-sm" id="main-tabs">
+        <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300"
+                data-tab="home">
+          Home
+        </button>
+        <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300"
+                data-tab="weather">
+          WEATHER &amp; FORECAST
+        </button>
+        <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300"
+                data-tab="map">
+          MAP
+        </button>
+        <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300"
+                data-tab="posts">
+          POSTS
+        </button>
+      </nav>
+
+      <!-- auth -->
+      <div class="flex gap-3 text-sm">
+        <a href="/register" class="text-slate-500 hover:text-slate-900">Register</a>
+        <a href="/login" class="px-4 py-1 rounded bg-slate-900 text-white">Log in</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- HOME -->
+    <section id="tab-home" class="tab-panel">
+      <h1 class="text-3xl font-bold mb-2">Connect. Surf. Protect.</h1>
+      <p class="text-slate-600 mb-6">
+        Find surf spots, check live conditions, and share tips with your community.
+      </p>
+
+      <!-- fake hero block -->
+      <div class="bg-slate-200 rounded-xl h-56 mb-10 flex items-center justify-center">
+        <span class="text-slate-500">hero / map / image</span>
+      </div>
+
+      <h2 class="text-xl font-semibold mb-3">Community Highlights</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-xl border p-4">
+          <p class="text-sm text-slate-500">Viezh Robert</p>
+          <p class="font-semibold">Atlantic City</p>
+          <p class="text-xs mt-2 text-slate-500">Clean, 3–4 ft — everyday</p>
+        </div>
+        <div class="bg-white rounded-xl border p-4">
+          <p class="text-sm text-slate-500">Viezh Robert</p>
+          <p class="font-semibold">South Miami</p>
+          <p class="text-xs mt-2 text-slate-500">Clean, 4–6 ft</p>
+        </div>
+        <div class="bg-white rounded-xl border p-4">
+          <p class="text-sm text-slate-500">Viezh Robert</p>
+          <p class="font-semibold">Fort Lauderdale</p>
+          <p class="text-xs mt-2 text-slate-500">Choppy, 6–8 ft</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEATHER -->
+    <section id="tab-weather" class="tab-panel hidden">
+      <h2 class="text-2xl font-semibold mb-4">Weather &amp; Forecast</h2>
+      <p class="text-slate-600 mb-4">This is where you’ll render the Open-Meteo Marine API results.</p>
+      <div class="bg-white border rounded-xl p-4">
+        <!-- you can fill with actual data later -->
+        <p class="text-sm text-slate-500">Select a spot, show swell, wind, tide, etc.</p>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section id="tab-map" class="tab-panel hidden">
+      <h2 class="text-2xl font-semibold mb-4">Surf Spots Map</h2>
+      <input type="text" placeholder="Search by beach or location"
+             class="w-full mb-4 px-4 py-2 rounded-full border" />
+      <div id="map" class="w-full h-[450px] rounded-xl bg-slate-200 flex items-center justify-center">
+        <span class="text-slate-500 text-sm">Leaflet / Google map goes here</span>
+      </div>
+    </section>
+
+    <!-- POSTS -->
+    <section id="tab-posts" class="tab-panel hidden">
+      <h2 class="text-2xl font-semibold mb-4">Community Posts</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <article class="bg-white rounded-xl border p-4">
+          <p class="text-xs uppercase tracking-wide text-slate-400 mb-2">Design</p>
+          <h3 class="font-semibold mb-2">Beach Name</h3>
+          <p class="text-sm text-slate-500 mb-4">
+            Info about surf trip tips and other pictures.
+          </p>
+          <p class="text-xs text-slate-400">Olivia Rhye • 20 Jan 2025</p>
+        </article>
+        <article class="bg-white rounded-xl border p-4">
+          <p class="text-xs uppercase tracking-wide text-slate-400 mb-2">Product</p>
+          <h3 class="font-semibold mb-2">Beach Name</h3>
+          <p class="text-sm text-slate-500 mb-4">
+            Local notes from this spot.
+          </p>
+          <p class="text-xs text-slate-400">David Wilson • 18 Jan 2025</p>
+        </article>
+        <article class="bg-white rounded-xl border p-4">
+          <p class="text-xs uppercase tracking-wide text-slate-400 mb-2">Management</p>
+          <h3 class="font-semibold mb-2">Beach Name</h3>
+          <p class="text-sm text-slate-500 mb-4">
+            Pollution alert and cleanup invite.
+          </p>
+          <p class="text-xs text-slate-400">Lara Seltzer • 14 Jan 2025</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JS for tabs -->
+  <script src="/js/tabs.js"></script>
+
+  <script src="/js/tabs.js"></script>
+  <script src="/js/home.js"></script>
+  <script src="/js/weather.js"></script>
+  <script src="/js/map.js"></script>
+  <script src="/js/posts.js"></script>
+
+</body>
+</html>
