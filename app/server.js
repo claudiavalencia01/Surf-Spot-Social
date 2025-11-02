@@ -13,6 +13,14 @@ let app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// Serve static frontend files from /public
+app.use(express.static("public"));
+
+// Root route -> load index.html for localhost:3000/
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/public/index.html");
+});
+
 let tokenStorage = {};
 
 pool.connect().then(() => {
