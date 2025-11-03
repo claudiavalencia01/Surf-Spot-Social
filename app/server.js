@@ -4,6 +4,7 @@ const { Pool } = require("pg");
 const argon2 = require("argon2");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
+const axios = require("axios"); // <-- added for weather API
 
 // env.json is in the ROOT folder (one level above /app)
 const env = require("../env.json");
@@ -24,6 +25,32 @@ app.use(express.static("public"));
 
 // API routes
 app.use("/api/spots", require("./routes/spots"));
+app.use("/api/weather", require("./routes/weather"));
+
+
+// ✅ Weather route (added)
+app.get("/api/weather", async (req, res) => {
+  const { lat, lon } = req.query;
+
+  if (!lat || !lon) {
+    return res.status(400).json({ error: "Latitude and longitude are required" });
+  }
+
+  try {
+    const response = await axios.get("https://api.open-meteo.com/v1/forecast", {
+      params: {
+        latitude: lat,
+        longitude: lon,
+        current_weather: true,
+      },
+    });
+
+    res.json(response.data);
+  } catch (err) {
+    console.error("Weather API error:", err);
+    res.status(500).json({ error: "Failed to fetch weather data" });
+  }
+});
 
 // Root route
 app.get("/", (req, res) => {
