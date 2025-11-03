@@ -1,213 +1,153 @@
-let express = require("express");
+const express = require("express");
 const path = require("path");
-let { Pool } = require("pg");
-let argon2 = require("argon2");
-let cookieParser = require("cookie-parser");
-let crypto = require("crypto");
-let env = require("../env.json");
+const { Pool } = require("pg");
+const argon2 = require("argon2");
+const cookieParser = require("cookie-parser");
+const crypto = require("crypto");
 
-let hostname = "localhost";
-let port = 3000;
+// env.json is in the ROOT folder (one level above /app)
+const env = require("../env.json");
 
-let pool = new Pool(env);
-let app = express();
+const hostname = "localhost";
+const port = 3000;
+
+// Connect to Postgres
+const pool = new Pool(env);
+global.pool = pool; // make available to routes
+
+const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
 // Serve static frontend files from /public
 app.use(express.static("public"));
 
-// Root route -> load index.html for localhost:3000/
+// API routes
+app.use("/api/spots", require("./routes/spots"));
+
+// Root route
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
-let tokenStorage = {};
-
-pool.connect().then(() => {
-    console.log("Connected to database");
-});
-
-function makeToken() {
-    return crypto.randomBytes(32).toString("hex");
-}
-// this new route for register page:
+// Register + Login routes
 app.get("/register", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/register.html"));
+  res.sendFile(path.join(__dirname, "public/register.html"));
 });
-
-//  same for login page route:
 app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/login.html"));
+  res.sendFile(path.join(__dirname, "public/login.html"));
 });
 
-// Cookie settings
-let cookieOptions = {
-    httpOnly: true,
-    secure: false, // false for localhost; true in production (HTTPS)
-    sameSite: "strict",
+// Utility functions
+const tokenStorage = {};
+const cookieOptions = {
+  httpOnly: true,
+  secure: false, // use true for HTTPS
+  sameSite: "strict",
 };
 
-function validateBody(body, requiredFields){
-    for (let field of requiredFields) {
-        if (!body[field]) {
-            return false;
-        }
-    }
-    return true;
+function makeToken() {
+  return crypto.randomBytes(32).toString("hex");
 }
-
-function validateUsername(username) {
-    return /^[a-zA-Z0-9]{3,20}$/.test(username);
+function validateBody(body, required) {
+  return required.every(f => !!body[f]);
 }
-
-function validatePassword(password) {
-    return password.length >= 6;
+function validateUsername(u) {
+  return /^[a-zA-Z0-9]{3,20}$/.test(u);
 }
-
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function validatePassword(p) {
+  return p.length >= 6;
+}
+function validateEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
 // Create Account
 app.post("/create", async (req, res) => {
-    let { first_name, last_name, username, email, password } = req.body;
+  const { first_name, last_name, username, email, password } = req.body;
 
-    if (!validateBody(req.body, ["first_name", "last_name", "username", "email", "password"])) {
-        return res.status(400).send("Missing required fields");
-    }
+  if (!validateBody(req.body, ["first_name", "last_name", "username", "email", "password"]))
+    return res.status(400).send("Missing required fields");
+  if (!validateUsername(username))
+    return res.status(400).send("Username must be 3–20 alphanumeric characters");
+  if (!validatePassword(password))
+    return res.status(400).send("Password must be at least 6 characters");
+  if (!validateEmail(email))
+    return res.status(400).send("Invalid email format");
 
-    if (!validateUsername(username)) {
-        return res.status(400).send("Username must 3-20 alphanumeric characters");
-    }
+  try {
+    const exists = await pool.query(
+      "SELECT 1 FROM users WHERE username=$1 OR email=$2",
+      [username, email]
+    );
+    if (exists.rows.length) return res.status(400).send("Username or email already exists");
 
-    if (!validatePassword(password)) {
-        return res.status(400).send("Password must be at least 6 characters");
-    }
-
-    if (!validateEmail(email)) {
-        return res.status(400).send("Invalid email format");
-    }
-
-    // Check if username or email already exists
-    let exists;
-    try {
-        exists = await pool.query(
-            "SELECT * FROM users WHERE username=$1 OR email=$2",
-            [username, email]
-        );
-    } catch (error) {
-        console.error("SELECT failed:", error);
-        return res.sendStatus(500);
-    }
-
-    if (exists.rows.length > 0) {
-        return res.status(400).send("Username or email already exists");
-    }
-
-    // Hash password
-    let hash;
-    try {
-        hash = await argon2.hash(password);
-    } catch (error) {
-        console.error("Error hashing password:", error);
-        return res.sendStatus(500);
-    }
-
-    // Insert user into DB
-    try {
-        await pool.query(
-            `INSERT INTO users (first_name, last_name, username, email, password_hash)
-            VALUES ($1, $2, $3, $4, $5)`,
-            [first_name, last_name, username, email, hash]
-        );
-    } catch (error) {
-        console.error("Error inserting user:", error);
-        return res.sendStatus(500);
-    }
-
-    // Successful registration — prompt user to log in next
+    const hash = await argon2.hash(password);
+    await pool.query(
+      `INSERT INTO users (first_name, last_name, username, email, password_hash)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [first_name, last_name, username, email, hash]
+    );
     res.status(200).send("User created successfully. Please log in.");
-}); // ✅ closed the /create route properly
+  } catch (err) {
+    console.error("Error creating user:", err);
+    res.sendStatus(500);
+  }
+});
 
 // Login
 app.post("/login", async (req, res) => {
-    let { username, password } = req.body;
+  const { username, password } = req.body;
+  if (!validateBody(req.body, ["username", "password"]))
+    return res.status(400).send("Missing username or password");
 
-    if (!validateBody(req.body, ["username", "password"])) {
-        return res.status(400).send("Missing username or password");
-    }
+  try {
+    const result = await pool.query(
+      "SELECT password_hash FROM users WHERE username = $1",
+      [username]
+    );
+    if (!result.rows.length) return res.status(400).send("Invalid credentials");
 
-    let result;
-    try {
-        result = await pool.query(
-            "SELECT password_hash FROM users WHERE username = $1", 
-            [username]
-        );
-    } catch (error) {
-        console.error("SELECT failed:", error);
-        return res.sendStatus(500);
-    }
+    const valid = await argon2.verify(result.rows[0].password_hash, password);
+    if (!valid) return res.status(400).send("Invalid credentials");
 
-    if (result.rows.length === 0) {
-        return res.status(400).send("Invalid credentials");
-    }
-
-    let hash = result.rows[0].password_hash;
-    let verifyResult;
-    try {
-        verifyResult = await argon2.verify(hash, password);
-    } catch (error) {
-        console.log("Password verificaton failed:", error);
-        return res.sendStatus(500);
-    }
-
-    if (!verifyResult) {
-        return res.status(400).send("Invalid credentials");
-    }
-
-    let token = makeToken();
+    const token = makeToken();
     tokenStorage[token] = username;
     res.cookie("token", token, cookieOptions).status(200).send("Logged in successfully");
+  } catch (err) {
+    console.error("Login error:", err);
+    res.sendStatus(500);
+  }
 });
 
-// Authorization middleware
-let authorize = (req, res, next) => {
-    let { token } = req.cookies;
-    if (!token || !tokenStorage.hasOwnProperty(token)) {
-        return res.sendStatus(403);
-    }
-    next();
+// Auth middleware
+const authorize = (req, res, next) => {
+  const { token } = req.cookies;
+  if (!token || !(token in tokenStorage)) return res.sendStatus(403);
+  next();
 };
 
 // Logout
 app.post("/logout", (req, res) => {
-    let { token } = req.cookies;
-
-    if (token === undefined) {
-        console.log("Already logged out");
-        return res.sendStatus(400);
-    }
-
-    if (!tokenStorage.hasOwnProperty(token)) {
-        console.log("Token doesn't exist");
-        return res.sendStatus(400);
-    }
-
-    delete tokenStorage[token];
-    res.clearCookie("token", cookieOptions).send("Logged out successfully");
+  const { token } = req.cookies;
+  if (!token || !(token in tokenStorage)) return res.status(400).send("Already logged out");
+  delete tokenStorage[token];
+  res.clearCookie("token", cookieOptions).send("Logged out successfully");
 });
 
-// Serves content for any user
-app.get("/public", (req, res) => {
-    return res.send("A public message\n");
-});
+// Public/private test routes
+app.get("/public", (req, res) => res.send("A public message\n"));
+app.get("/private", authorize, (req, res) => res.send("A private message\n"));
 
-// Serves content for logged in users
-app.get("/private", authorize, (req, res) => {
-    return res.send("A private message\n");
-});
-
-app.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}`);
-});
+// Start server after DB connects
+pool.connect()
+  .then(() => {
+    console.log("Connected to database");
+    app.listen(port, hostname, () => {
+      console.log(`Server running at http://${hostname}:${port}`);
+    });
+  })
+  .catch(err => {
+    console.error("Database connection failed:", err);
+    process.exit(1);
+  });
