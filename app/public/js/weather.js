@@ -1,28 +1,24 @@
-// app/public/js/weather.js
+// app/routes/weather.js
+const express = require("express");
+const router = express.Router();
+const fetch = require("node-fetch");
 
-async function getWeather(lat, lon) {
-  try {
-    const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
-    if (!response.ok) throw new Error("Network response was not ok");
-
-    const data = await response.json();
-    console.log("Marine weather data:", data);
-
-    // Show data on page if element exists
-    const info = document.getElementById("weather-info");
-    if (info && data.hourly) {
-      info.innerHTML = `
-        <h3>Weather at (${lat}, ${lon})</h3>
-        <p><b>Wave Height:</b> ${data.hourly.wave_height?.[0] ?? "N/A"} m</p>
-        <p><b>Wave Period:</b> ${data.hourly.wave_period?.[0] ?? "N/A"} s</p>
-        <p><b>Sea Temp:</b> ${data.hourly.sea_surface_temperature?.[0] ?? "N/A"} °C</p>
-        <p><b>Wind Speed:</b> ${data.hourly.wind_speed_10m?.[0] ?? "N/A"} m/s</p>
-      `;
-    }
-  } catch (error) {
-    console.error("Error fetching weather data:", error);
+// GET /api/weather?lat=36.85&lon=-75.98
+router.get("/", async (req, res) => {
+  const { lat, lon } = req.query;
+  if (!lat || !lon) {
+    return res.status(400).json({ error: "Missing lat/lon parameters" });
   }
-}
 
-// Example: Santa Cruz coordinates
-getWeather(36.97, -122.03);
+  try {
+    const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height,wind_speed_10m,wind_direction_10m,wind_wave_height,wind_wave_period,wind_wave_direction,swell_wave_height,swell_wave_period,swell_wave_direction,air_temperature,water_temperature`;
+    const r = await fetch(url);
+    const data = await r.json();
+    res.json(data);
+  } catch (e) {
+    console.error("Weather API error:", e);
+    res.status(500).json({ error: "Failed to fetch weather data" });
+  }
+});
+
+module.exports = router;

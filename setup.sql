@@ -1,14 +1,19 @@
-@ -2,6 +2,7 @@ DROP DATABASE IF EXISTS surfspot_social;
+-- Drop and recreate database
+DROP DATABASE IF EXISTS surfspot_social;
 CREATE DATABASE surfspot_social;
 \c surfspot_social
 
 -- Users table 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
-	user_id SERIAL PRIMARY KEY,
-@ -14,3 +15,22 @@ CREATE TABLE users (
-    profile_pic_url TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+  user_id SERIAL PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  profile_pic_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Surf spots table

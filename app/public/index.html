@@ -7,6 +7,13 @@
  
   <!-- Tailwind CDN for now -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 </head>
 <body class="bg-slate-50 min-h-screen">
 
@@ -100,9 +107,10 @@
       <h2 class="text-2xl font-semibold mb-4">Surf Spots Map</h2>
       <input type="text" placeholder="Search by beach or location"
              class="w-full mb-4 px-4 py-2 rounded-full border" />
-      <div id="map" class="w-full h-[450px] rounded-xl bg-slate-200 flex items-center justify-center">
-        <span class="text-slate-500 text-sm">Leaflet / Google map goes here</span>
+      <div class="map-wrapper w-full h-[450px] rounded-xl overflow-hidden">
+        <div id="map" class="w-full h-full"></div>
       </div>
+      
     </section>
 
     <!-- POSTS -->
@@ -140,10 +148,8 @@
 
   <!-- JS for tabs -->
   <script src="/js/tabs.js"></script>
-
-  <script src="/js/tabs.js"></script>
   <script src="/js/home.js"></script>
-  <script src="/js/weather.js"></script>
+  <!--script src="/js/weather.js"></script-->
   <script src="/js/map.js"></script>
   <script src="/js/posts.js"></script>
   

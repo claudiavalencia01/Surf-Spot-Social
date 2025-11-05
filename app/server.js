@@ -1,10 +1,10 @@
+// app/server.js
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
 const argon2 = require("argon2");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
-const axios = require("axios"); // <-- added for weather API
 
 // env.json is in the ROOT folder (one level above /app)
 const env = require("../env.json");
@@ -25,71 +25,36 @@ app.use(express.static("public"));
 
 // API routes
 app.use("/api/spots", require("./routes/spots"));
-app.use("/api/weather", require("./routes/weather"));
-
-
-// ✅ Weather route (added)
-app.get("/api/weather", async (req, res) => {
-  const { lat, lon } = req.query;
-
-  if (!lat || !lon) {
-    return res.status(400).json({ error: "Latitude and longitude are required" });
-  }
-
-  try {
-    const response = await axios.get("https://api.open-meteo.com/v1/forecast", {
-      params: {
-        latitude: lat,
-        longitude: lon,
-        current_weather: true,
-      },
-    });
-
-    res.json(response.data);
-  } catch (err) {
-    console.error("Weather API error:", err);
-    res.status(500).json({ error: "Failed to fetch weather data" });
-  }
-});
+app.use("/api/weather", require("./routes/weather")); // <-- keep ONLY this for weather
 
 // Root route
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Register + Login routes
+// Register + Login pages
 app.get("/register", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/register.html"));
+  res.sendFile(path.join(__dirname, "public", "register.html"));
 });
 app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/login.html"));
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Utility functions
+// Beach page shell (client fetches spot data)
+app.get("/spots/:id", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "spot.html"));
+});
+
+// --- Auth + users ---
 const tokenStorage = {};
-const cookieOptions = {
-  httpOnly: true,
-  secure: false, // use true for HTTPS
-  sameSite: "strict",
-};
+const cookieOptions = { httpOnly: true, secure: false, sameSite: "strict" };
 
-function makeToken() {
-  return crypto.randomBytes(32).toString("hex");
-}
-function validateBody(body, required) {
-  return required.every(f => !!body[f]);
-}
-function validateUsername(u) {
-  return /^[a-zA-Z0-9]{3,20}$/.test(u);
-}
-function validatePassword(p) {
-  return p.length >= 6;
-}
-function validateEmail(e) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-}
+function makeToken() { return crypto.randomBytes(32).toString("hex"); }
+function validateBody(body, required) { return required.every(f => !!body[f]); }
+function validateUsername(u) { return /^[a-zA-Z0-9]{3,20}$/.test(u); }
+function validatePassword(p) { return p.length >= 6; }
+function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
-// Create Account
 app.post("/create", async (req, res) => {
   const { first_name, last_name, username, email, password } = req.body;
 
@@ -122,7 +87,6 @@ app.post("/create", async (req, res) => {
   }
 });
 
-// Login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   if (!validateBody(req.body, ["username", "password"]))
@@ -147,14 +111,12 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Auth middleware
 const authorize = (req, res, next) => {
   const { token } = req.cookies;
   if (!token || !(token in tokenStorage)) return res.sendStatus(403);
   next();
 };
 
-// Logout
 app.post("/logout", (req, res) => {
   const { token } = req.cookies;
   if (!token || !(token in tokenStorage)) return res.status(400).send("Already logged out");
@@ -162,7 +124,6 @@ app.post("/logout", (req, res) => {
   res.clearCookie("token", cookieOptions).send("Logged out successfully");
 });
 
-// Public/private test routes
 app.get("/public", (req, res) => res.send("A public message\n"));
 app.get("/private", authorize, (req, res) => res.send("A private message\n"));
 
