@@ -61,7 +61,7 @@ app.post("/create", async (req, res) => {
   if (!validateBody(req.body, ["first_name", "last_name", "username", "email", "password"]))
     return res.status(400).send("Missing required fields");
   if (!validateUsername(username))
-    return res.status(400).send("Username must be 3–20 alphanumeric characters");
+    return res.status(400).send("Username must be 3-20 alphanumeric characters");
   if (!validatePassword(password))
     return res.status(400).send("Password must be at least 6 characters");
   if (!validateEmail(email))
