@@ -26,6 +26,7 @@ app.use(express.static("public"));
 // API routes
 app.use("/api/spots", require("./routes/spots"));
 app.use("/api/weather", require("./routes/weather")); // <-- keep ONLY this for weather
+app.use("/api/geocode", require("./routes/geocode"));
 
 // Root route
 app.get("/", (req, res) => {
