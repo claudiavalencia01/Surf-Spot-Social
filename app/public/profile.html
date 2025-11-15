@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Profile - SurfSpot Social</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- Include the same NAV BAR from index.html -->
+  <header class="border-b bg-white">
+    <div class="max-w-6xl mx-auto flex items-center justify-between h-14 px-4">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold tracking-wide uppercase">SURFSPOT</span>
+      </div>
+
+      <!-- Empty auth section, will be filled by auth.js -->
+      <div id="auth-section" class="flex gap-3 text-sm"></div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-3xl mx-auto mt-10 bg-white border rounded-xl p-6 shadow">
+    <h1 class="text-3xl font-bold mb-4">Your Profile</h1>
+    <div id="profile-info" class="text-slate-700 text-lg"></div>
+  </main>
+
+  <script>
+    async function loadProfile() {
+      const res = await fetch("/me");
+      const { user } = await res.json();
+
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      document.getElementById("profile-info").innerHTML = `
+        <p><strong>Username:</strong> ${user.username}</p>
+        <p class="mt-2 text-slate-500 text-sm">More profile features coming soon!</p>
+      `;
+    }
+    loadProfile();
+  </script>
+
+  <!-- Auth nav logic -->
+  <script src="/js/auth.js"></script>
+</body>
+</html>

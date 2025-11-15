@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Serve static frontend files from /public
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // API routes
 app.use("/api/spots", require("./routes/spots"));
@@ -127,6 +127,14 @@ app.post("/logout", (req, res) => {
 
 app.get("/public", (req, res) => res.send("A public message\n"));
 app.get("/private", authorize, (req, res) => res.send("A private message\n"));
+
+// --- Get current logged-in user ---
+app.get("/me", (req, res) => {
+  const { token } = req.cookies;
+  if (!token || !(token in tokenStorage)) return res.json({ user: null });
+  const username = tokenStorage[token];
+  res.json({ user: { username } });
+});
 
 // Start server after DB connects
 pool.connect()
