@@ -92,13 +92,37 @@
 <section id="tab-weather" class="tab-panel hidden">
   <h2 class="text-2xl font-semibold mb-4">Weather &amp; Forecast</h2>
   <p class="text-slate-600 mb-4">This is where you’ll render the Open-Meteo Marine API results.</p>
-
-  <div class="bg-white border rounded-xl p-4 space-y-4">
-    <p class="text-sm text-slate-500">Select a spot, show swell, wind, tide, etc.</p>
-
-    <!-- Weather data will show here -->
-    <div id="weather-info" class="text-slate-700 text-sm"></div>
+  <div id="weather-search" class="flex flex-row items-center gap-2 w-full mb-4">
+    <input id="weather-search-input" type="text" placeholder="Search for a beach or location" class="flex-[2] px-4 py-2 rounded-full border" />
+    <button id="weather-search-btn" class="px-4 py-2 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition">
+      Search
+    </button>
+    <button id="use-location-btn" class="px-4 py-2 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition">
+      Use My Location
+    </button>
   </div>
+  <div>
+    <h1 id="place-name" class="text-3xl font-bold mb-0"></h1>
+    <p id="place-location" class="mt-0"></p>
+    <p id="place-coordinates" class="text-slate-500"></p>
+    <p id="observed-time" class="text-slate-500"></p>
+  </div>
+  <div id="weather-search-results" class="mt-2 rounded-xl border border-slate-200 bg-white shadow-sm hidden"></div>
+  <!-- Current conditions -->
+  <h3 class="text-lg font-medium text-slate-800 mt-6 mb-2">Current Conditions</h3>
+  <div id="current-weather-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
+   
+  <!-- Today summary -->
+  <h3 class="text-lg font-medium text-slate-800 mt-8 mb-2">Today at a Glance</h3>
+  <div id="today-summary" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
+  
+  <!-- 5-day forecast -->
+  <h3 class="text-lg font-medium text-slate-800 mt-8 mb-2">5-Day Forecast</h3>
+  <div id="five-day-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+  
+  <!-- UX messages -->
+  <div id="loading" class="hidden mt-6 text-slate-600">Loading…</div>
+  <div id="error" class="hidden mt-2 text-red-600"></div>
 </section>
 
 
@@ -147,9 +171,10 @@
   </main>
 
   <!-- JS for tabs -->
+   <script src="/js/weather-utils.js"></script>
   <script src="/js/tabs.js"></script>
   <script src="/js/home.js"></script>
-  <!--script src="/js/weather.js"></script-->
+  <script src="/js/weather.js"></script>
   <script src="/js/map.js"></script>
   <script src="/js/posts.js"></script>
   
