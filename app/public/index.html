@@ -129,13 +129,20 @@
     <!-- MAP -->
     <section id="tab-map" class="tab-panel hidden">
       <h2 class="text-2xl font-semibold mb-4">Surf Spots Map</h2>
-      <input type="text" placeholder="Search by beach or location"
-             class="w-full mb-4 px-4 py-2 rounded-full border" />
+
+      <!-- ADD THIS ID -->
+      <input 
+        id="spot-search"
+        type="text" 
+        placeholder="Search by beach or location"
+        class="w-full mb-4 px-4 py-2 rounded-full border"
+      />
+
       <div class="map-wrapper w-full h-[450px] rounded-xl overflow-hidden">
         <div id="map" class="w-full h-full"></div>
       </div>
-      
     </section>
+
 
     <!-- POSTS -->
     <section id="tab-posts" class="tab-panel hidden">
