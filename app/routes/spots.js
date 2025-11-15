@@ -69,4 +69,38 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// CREATE a new spot from a map click
+router.post("/", async (req, res) => {
+  try {
+    let { name, description, latitude, longitude, country, region } = req.body;
+
+    // basic validation
+    if (!name || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({ message: "name, latitude, and longitude are required" });
+    }
+    latitude = Number(latitude);
+    longitude = Number(longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+        latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+      return res.status(400).json({ message: "Invalid coordinates" });
+    }
+
+    const created_by = null; // (hook in your auth later if you want)
+
+    const insert = await pool.query(
+      `INSERT INTO surf_spots
+        (name, description, latitude, longitude, country, region, created_by, source)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'user')
+       RETURNING id, name, description, latitude, longitude, country, region, created_by, created_at, source`,
+      [name, description || null, latitude, longitude, country || null, region || null, created_by]
+    );
+
+    res.status(201).json(insert.rows[0]);
+  } catch (err) {
+    console.error("POST /api/spots error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 module.exports = router;

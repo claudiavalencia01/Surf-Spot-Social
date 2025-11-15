@@ -36,3 +36,8 @@ VALUES
  ('Atlantic City', 'Consistent beach breaks',          39.364300, -74.422900, 'USA', 'New Jersey'),
  ('Fort Lauderdale', 'Often choppy; can be fun',       26.122400, -80.137300, 'USA', 'Florida')
 ON CONFLICT DO NOTHING;
+
+ALTER TABLE surf_spots
+  ADD COLUMN IF NOT EXISTS created_by TEXT,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'user';
