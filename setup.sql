@@ -9,9 +9,9 @@ CREATE TABLE users (
   user_id SERIAL PRIMARY KEY,
   first_name VARCHAR(50) NOT NULL,
   last_name VARCHAR(50) NOT NULL,
-	username VARCHAR(50) NOT NULL UNIQUE,
-	email VARCHAR(100) NOT NULL UNIQUE,
-	password_hash TEXT NOT NULL,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
   bio TEXT,
   profile_pic_url TEXT,
   created_at TIMESTAMP DEFAULT NOW()
@@ -36,3 +36,26 @@ VALUES
  ('Atlantic City', 'Consistent beach breaks',          39.364300, -74.422900, 'USA', 'New Jersey'),
  ('Fort Lauderdale', 'Often choppy; can be fun',       26.122400, -80.137300, 'USA', 'Florida')
 ON CONFLICT DO NOTHING;
+
+
+-- POSTS TABLE
+DROP TABLE IF EXISTS posts;
+CREATE TABLE posts (
+  post_id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  spot_id INTEGER REFERENCES surf_spots(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  image_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- COMMENTS TABLE
+DROP TABLE IF EXISTS comments;
+CREATE TABLE comments (
+  comment_id SERIAL PRIMARY KEY,
+  post_id INTEGER REFERENCES posts(post_id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);

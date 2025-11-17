@@ -39,6 +39,10 @@ app.use("/api/spots", require("./routes/spots"));
 app.use("/api/weather", require("./routes/weather"));
 app.use("/api/geocode", require("./routes/geocode"));
 app.use("/api/users", require("./routes/users"));   // profile routes
+app.use("/api/posts", require("./routes/posts"));
+app.use("/api/comments", require("./routes/comments"));
+
+
 
 
 // Root route
