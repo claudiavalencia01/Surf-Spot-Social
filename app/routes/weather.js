@@ -9,8 +9,15 @@ router.get("/", async (req, res) => {
   if (!lat || !lon) return res.status(400).send("Missing latitude or longitude");
 
   try {
-    const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,sea_surface_temperature`;
-    const response = await axios.get(url);
+    const response = await axios.get("https://marine-api.open-meteo.com/v1/marine", {
+      params: {
+        latitude: lat,
+        longitude: lon,
+        hourly: "wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,sea_surface_temperature",
+        daily: "wave_height_max,wind_wave_height_max",
+        timezone: "auto"
+      }
+    });
     res.json(response.data);
   } catch (err) {
     console.error("Error fetching weather data:", err.response ? err.response.data : err.message);
