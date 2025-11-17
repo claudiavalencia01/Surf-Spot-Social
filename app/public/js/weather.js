@@ -8,27 +8,24 @@ let {
 
 let UNITS = { temp: "°F", wind: "mph", waves: "m" };
 
-// Status + sections
 let loading;
 let errorMessage;
 let currentWeatherGrid;
+let todaySummaryGrid;
+let fiveDayGrid;
 
-// Header
 let placeName;
 let placeLocation;
 let placeCoordinates;
 let observedTime;
 
-// Controls
 let useLocationButton;
 let weatherSearchInput;
 let weatherSearchButton;
 let weatherSearchResults;
 
-// Debounce timer
 let searchDebounceTimer;
 
-// ========== UI Helpers ==========
 function showLoading() {
   loading.classList.remove("hidden");
   loading.setAttribute("aria-busy", "true");
@@ -52,7 +49,6 @@ function clearElement(element) {
   element.textContent = "";
 }
 
-// ========== Header Renderer ==========
 function updateHeader(place, latitude, longitude) {
   placeName.textContent = place?.name || "";
 
@@ -70,7 +66,6 @@ function updateHeader(place, latitude, longitude) {
   observedTime.textContent = "";
 }
 
-// ========== Render Current Conditions ==========
 function renderCurrentWeather(weatherData) {
   clearElement(currentWeatherGrid);
 
@@ -96,7 +91,7 @@ function renderCurrentWeather(weatherData) {
 
   if (!hasData) {
     currentWeatherGrid.appendChild(
-      createWeatherTile("Current Conditions", "No marine data for this location.")
+      createWeatherTile("No marine data for this location.")
     );
     return;
   }
@@ -119,7 +114,94 @@ function renderCurrentWeather(weatherData) {
   }
 }
 
-// ========== Fetch → Weather ==========
+function renderTodaySummary(weatherData) {
+  clearElement(todaySummaryGrid);
+
+  if (!todaySummaryGrid) return;
+
+  let daily = (weatherData && weatherData.daily) || {};
+  let waveHeightMaxMeters = (daily.wave_height_max || [])[0];
+  let windWaveHeightMaxMeters = (daily.wind_wave_height_max || [])[0];
+
+  let waveHeightMaxFeet = metersToFeet(waveHeightMaxMeters);
+  let windWaveHeightMaxFeet = metersToFeet(windWaveHeightMaxMeters);
+
+  // If we have no daily values at all, show a simple message
+  if (waveHeightMaxFeet == null && windWaveHeightMaxFeet == null) {
+    todaySummaryGrid.appendChild(
+      createWeatherTile("No daily summary available.")
+    );
+    return;
+  }
+
+  if (waveHeightMaxFeet != null) {
+    todaySummaryGrid.appendChild(
+      createWeatherTile("Max Wave Height", `${waveHeightMaxFeet} ft`)
+    );
+  }
+
+  if (windWaveHeightMaxFeet != null) {
+    todaySummaryGrid.appendChild(
+      createWeatherTile("Max Wind-Wave Height", `${windWaveHeightMaxFeet} ft`)
+    );
+  }
+}
+
+function renderFiveDayForecast(weatherData) {
+  clearElement(fiveDayGrid);
+
+  if (!fiveDayGrid) return;
+
+  let daily = (weatherData && weatherData.daily) || {};
+  let forecastDates = daily.time || [];
+  let waveHeightMaxList = daily.wave_height_max || [];
+  let windWaveHeightMaxList = daily.wind_wave_height_max || [];
+
+  if (!forecastDates.length) {
+    fiveDayGrid.appendChild(
+      createWeatherTile("Forecast", "No forecast data available.")
+    );
+    return;
+  }
+
+  let totalDays = Math.min(5, forecastDates.length);
+
+  for (let dayIndex = 0; dayIndex < totalDays; dayIndex++) {
+    let card = document.createElement("div");
+    card.className = "rounded-xl bg-white border border-slate-200 p-4 shadow-sm text-left";
+
+    let dateLabel = document.createElement("div");
+    dateLabel.className = "text-sm font-semibold text-slate-700 mb-2";
+    dateLabel.textContent = formatForecastDate(forecastDates[dayIndex]);
+
+    let waveLabel = document.createElement("p");
+    waveLabel.className = "text-sm text-slate-600";
+    waveLabel.textContent = "Max Wave Height";
+
+    let waveHeightFeet = metersToFeet(waveHeightMaxList[dayIndex]);
+    let waveValue = document.createElement("p");
+    waveValue.className = "text-xl font-semibold text-slate-900";
+    waveValue.textContent = (waveHeightFeet != null) ? `${waveHeightFeet} ft` : "—";
+
+    let windWaveLabel = document.createElement("p");
+    windWaveLabel.className = "text-sm text-slate-600 mt-2";
+    windWaveLabel.textContent = "Max Wind-Wave Height";
+
+    let windWaveHeightFeet = metersToFeet(windWaveHeightMaxList[dayIndex]);
+    let windWaveValue = document.createElement("p");
+    windWaveValue.className = "text-xl font-semibold text-slate-900";
+    windWaveValue.textContent = (windWaveHeightFeet != null) ? `${windWaveHeightFeet} ft` : "—";
+
+    card.appendChild(dateLabel);
+    card.appendChild(waveLabel);
+    card.appendChild(waveValue);
+    card.appendChild(windWaveLabel);
+    card.appendChild(windWaveValue);
+
+    fiveDayGrid.appendChild(card);
+  }
+}
+
 function fetchWeather(latitude, longitude) {
   let url = `/api/weather?lat=${latitude}&lon=${longitude}`;
 
@@ -137,6 +219,8 @@ function renderFetchedWeather(data) {
   console.log("Weather API data:", data);
   hideLoading();
   renderCurrentWeather(data);
+  renderTodaySummary(data);
+  renderFiveDayForecast(data);
 }
 
 function handleWeatherError() {
@@ -144,7 +228,6 @@ function handleWeatherError() {
   showError("Could not load weather data.");
 }
 
-// ========== Geolocation ==========
 function handleUseLocationButtonClick() {
   clearError();
   showLoading();
@@ -175,7 +258,6 @@ function processPositionError() {
   showError("Unable to access your location.");
 }
 
-// ========== Search / Geocode ==========
 function handleSearchInputChange() {
   let value = weatherSearchInput.value.trim();
   if (value.length < 2) {
@@ -243,7 +325,6 @@ function handleSearchError() {
   showError("Search failed. Try again.");
 }
 
-// ========== INIT ==========
 function initializeWeatherPage() {
   // Status
   loading = document.getElementById("loading");
@@ -251,6 +332,8 @@ function initializeWeatherPage() {
 
   // Sections
   currentWeatherGrid = document.getElementById("current-weather-grid");
+  todaySummaryGrid = document.getElementById("today-summary");
+  fiveDayGrid = document.getElementById("five-day-grid");
 
   // Header
   placeName = document.getElementById("place-name");
@@ -270,6 +353,9 @@ function initializeWeatherPage() {
 
   clearError();
   hideLoading();
+
+   // auto-load weather for current location
+  handleUseLocationButtonClick();
 }
 
 window.addEventListener("DOMContentLoaded", initializeWeatherPage);
