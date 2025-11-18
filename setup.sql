@@ -50,6 +50,16 @@ CREATE TABLE posts (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- POST LIKES TABLE
+DROP TABLE IF EXISTS post_likes;
+CREATE TABLE post_likes (
+  like_id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
+  post_id INTEGER REFERENCES posts(post_id) ON DELETE CASCADE,
+  UNIQUE(user_id, post_id)
+);
+
+
 -- COMMENTS TABLE
 DROP TABLE IF EXISTS comments;
 CREATE TABLE comments (
