@@ -2,12 +2,15 @@
 
 let currentUser = null;
 
+// -----------------------------------------------------------
+// LOAD CURRENT USER
+// -----------------------------------------------------------
 async function loadUser() {
   try {
     const res = await fetch("/me");
     const data = await res.json();
     currentUser = data.user || null;
-  } catch (e) {
+  } catch {
     currentUser = null;
   }
 }
@@ -15,14 +18,16 @@ async function loadUser() {
 document.addEventListener("DOMContentLoaded", async () => {
   await loadUser();
   setupAuthGate();
+
   if (currentUser) {
+    await loadSpots();
     initCreatePostModal();
     loadPosts();
   }
 });
 
 // -----------------------------------------------------------
-// AUTH GATE — restore the “must log in to interact” feature
+// AUTH GATE
 // -----------------------------------------------------------
 function setupAuthGate() {
   const feed = document.getElementById("posts-feed");
@@ -32,13 +37,21 @@ function setupAuthGate() {
     feed.innerHTML = `
       <div class="text-center text-slate-600 p-6">
         <p class="text-lg font-semibold">You must be logged in to view or create posts.</p>
-        <p class="mt-2">Please log in using the button in the top-right.</p>
-      </div>
-    `;
+      </div>`;
     createBtn.style.display = "none";
   } else {
     createBtn.style.display = "inline-block";
   }
+}
+
+// -----------------------------------------------------------
+// LOAD SURF SPOTS (for dropdown)
+// -----------------------------------------------------------
+let allSpots = [];
+
+async function loadSpots() {
+  const res = await fetch("/api/spots");
+  allSpots = await res.json();
 }
 
 // -----------------------------------------------------------
@@ -56,23 +69,42 @@ async function loadPosts() {
     card.className =
       "bg-white rounded-xl border p-4 shadow-sm flex flex-col justify-between";
 
-    let controls = "";
-    if (currentUser && currentUser.username === p.username) {
-      controls = `
-        <div class="flex gap-2 mt-2">
-          <button class="edit-post px-2 py-1 bg-yellow-500 text-white rounded" data-id="${p.post_id}">Edit</button>
-          <button class="delete-post px-2 py-1 bg-red-600 text-white rounded" data-id="${p.post_id}">Delete</button>
-        </div>
-      `;
-    }
+    const spotName = p.spot_id
+      ? allSpots.find(s => s.id === p.spot_id)?.name || "Unknown Spot"
+      : "General";
+
+    const myPost = currentUser && currentUser.username === p.username;
 
     card.innerHTML = `
+      ${p.image_url ? `<img src="${p.image_url}" class="w-full h-48 object-cover rounded mb-3">` : ""}
+
       <h3 class="font-semibold text-lg">${p.title}</h3>
+
       <p class="text-slate-600 my-2">${p.content}</p>
-      <p class="text-xs text-slate-400">Posted by ${p.username} • ${new Date(
-      p.created_at
-    ).toLocaleDateString()}</p>
-      ${controls}
+
+      <p class="text-xs text-slate-500 mb-2">
+        <b>${spotName}</b> • Posted by <b>${p.username}</b> •
+        ${new Date(p.created_at).toLocaleDateString()}
+      </p>
+
+      <div class="flex items-center gap-4 mt-2">
+        <button class="like-btn text-blue-600" data-id="${p.post_id}">
+          ❤️ ${p.likes}
+        </button>
+
+        <button class="comment-btn text-slate-600" data-id="${p.post_id}">
+          💬 Comments
+        </button>
+
+        ${myPost ? `
+          <button class="edit-post px-2 py-1 bg-yellow-500 text-white rounded" data-id="${p.post_id}">
+            Edit
+          </button>
+          <button class="delete-post px-2 py-1 bg-red-600 text-white rounded" data-id="${p.post_id}">
+            Delete
+          </button>
+        ` : ""}
+      </div>
     `;
 
     feed.appendChild(card);
@@ -85,20 +117,33 @@ async function loadPosts() {
 // EVENT LISTENERS
 // -----------------------------------------------------------
 function attachPostEventListeners() {
+  // Delete
   document.querySelectorAll(".delete-post").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      await fetch(`/api/posts/${id}`, { method: "DELETE" });
+    btn.onclick = async () => {
+      await fetch(`/api/posts/${btn.dataset.id}`, { method: "DELETE" });
       loadPosts();
-    });
+    };
   });
 
+  // Edit
   document.querySelectorAll(".edit-post").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const post = await fetch(`/api/posts/${id}`).then((r) => r.json());
+    btn.onclick = async () => {
+      const post = await fetch(`/api/posts/${btn.dataset.id}`).then((r) => r.json());
       openEditPostModal(post);
-    });
+    };
+  });
+
+  // Like
+  document.querySelectorAll(".like-btn").forEach((btn) => {
+    btn.onclick = async () => {
+      await fetch(`/api/posts/${btn.dataset.id}/like`, { method: "POST" });
+      loadPosts();
+    };
+  });
+
+  // Comments (later hookup)
+  document.querySelectorAll(".comment-btn").forEach((btn) => {
+    btn.onclick = () => alert("Comments UI coming next.");
   });
 }
 
@@ -106,65 +151,57 @@ function attachPostEventListeners() {
 // MODALS
 // -----------------------------------------------------------
 function initCreatePostModal() {
-  const button = document.getElementById("open-create-post");
-  button.addEventListener("click", () => openCreatePostModal());
+  document.getElementById("open-create-post").onclick = () => openPostModal();
 }
 
 function openCreatePostModal() {
-  showPostModal({
-    mode: "create",
-    title: "",
-    content: "",
-    onSubmit: async (title, content) => {
-      await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
-      });
-      closePostModal();
-      loadPosts();
-    },
-  });
+  openPostModal();
 }
 
 function openEditPostModal(post) {
-  showPostModal({
-    mode: "edit",
-    title: post.title,
-    content: post.content,
-    onSubmit: async (title, content) => {
-      await fetch(`/api/posts/${post.post_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
-      });
-      closePostModal();
-      loadPosts();
-    },
-  });
+  openPostModal(post);
 }
 
-function showPostModal({ mode, title, content, onSubmit }) {
+function openPostModal(post = null) {
+  const mode = post ? "edit" : "create";
+
   const modal = document.createElement("div");
   modal.id = "post-modal";
-  modal.className =
-    "fixed inset-0 bg-black/40 flex items-center justify-center p-4";
+  modal.className = "fixed inset-0 bg-black/40 flex items-center justify-center p-4";
+
+  const titleVal = post?.title || "";
+  const contentVal = post?.content || "";
+  const spotVal = post?.spot_id || "";
 
   modal.innerHTML = `
     <div class="bg-white rounded-xl p-6 w-full max-w-md">
-      <h2 class="text-xl font-semibold mb-4">${
-        mode === "create" ? "Create Post" : "Edit Post"
-      }</h2>
+      <h2 class="text-xl font-semibold mb-4">
+        ${mode === "create" ? "Create Post" : "Edit Post"}
+      </h2>
 
-      <input id="post-title" value="${title}" placeholder="Title"
+      <input id="post-title" value="${titleVal}" placeholder="Title"
              class="w-full border px-3 py-2 rounded mb-3">
 
       <textarea id="post-content" placeholder="Write something..."
-                class="w-full border px-3 py-2 rounded mb-3 h-32">${content}</textarea>
+        class="w-full border px-3 py-2 rounded mb-3 h-32">${contentVal}</textarea>
+
+      <select id="post-spot" class="w-full border px-3 py-2 rounded mb-3">
+        <option value="">General / No Spot</option>
+        ${allSpots
+          .map(s => `<option value="${s.id}" ${s.id === spotVal ? "selected" : ""}>${s.name}</option>`)
+          .join("")}
+      </select>
+
+      <label class="block mb-3">
+        <span class="text-sm text-slate-600">Image (optional)</span>
+        <input type="file" id="post-image" class="mt-1">
+      </label>
 
       <div class="flex justify-end gap-2">
         <button id="close-post-modal" class="px-4 py-2 bg-slate-300 rounded">Cancel</button>
-        <button id="submit-post" class="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+        <button id="submit-post" class="px-4 py-2 bg-blue-600 text-white rounded">
+          ${mode === "create" ? "Create" : "Save"}
+        </button>
       </div>
     </div>
   `;
@@ -172,10 +209,31 @@ function showPostModal({ mode, title, content, onSubmit }) {
   document.body.appendChild(modal);
 
   document.getElementById("close-post-modal").onclick = closePostModal;
-  document.getElementById("submit-post").onclick = () => {
-    const t = document.getElementById("post-title").value.trim();
-    const c = document.getElementById("post-content").value.trim();
-    onSubmit(t, c);
+
+  document.getElementById("submit-post").onclick = async () => {
+    const title = document.getElementById("post-title").value.trim();
+    const content = document.getElementById("post-content").value.trim();
+    const spot_id = document.getElementById("post-spot").value;
+    const imageFile = document.getElementById("post-image").files[0];
+
+    const form = new FormData();
+    form.append("title", title);
+    form.append("content", content);
+    form.append("spot_id", spot_id);
+
+    if (imageFile) form.append("image", imageFile);
+
+    if (mode === "create") {
+      await fetch("/api/posts", { method: "POST", body: form });
+    } else {
+      await fetch(`/api/posts/${post.post_id}`, {
+        method: "PUT",
+        body: form,
+      });
+    }
+
+    closePostModal();
+    loadPosts();
   };
 }
 

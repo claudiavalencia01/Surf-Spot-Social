@@ -43,6 +43,18 @@ app.use("/api/posts", require("./routes/posts"));
 app.use("/api/comments", require("./routes/comments"));
 
 
+// --- IMAGE UPLOADS FOLDER ---
+const fs = require("fs");
+
+// Create /uploads folder if not exists
+const uploadsPath = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
+// Serve uploaded files
+app.use("/uploads", express.static(uploadsPath));
+
 
 
 // Root route
@@ -208,3 +220,4 @@ pool.connect()
     console.error("Database connection failed:", err);
     process.exit(1);
   });
+
