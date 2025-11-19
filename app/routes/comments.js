@@ -4,7 +4,7 @@ const router = express.Router();
 const pool = global.pool;
 const tokenStorage = global.tokenStorage;
 
-// Helper: get logged-in user
+// Helper: get logged-in user_id
 async function getUserIdFromToken(req) {
   const token = req.cookies.token;
   if (!token || !(token in tokenStorage)) return null;
@@ -19,60 +19,55 @@ async function getUserIdFromToken(req) {
 }
 
 /* ------------------------------------------
-   CREATE COMMENT
+   GET ALL COMMENTS FOR A POST
 ------------------------------------------- */
-router.post("/:postId", async (req, res) => {
-  const userId = await getUserIdFromToken(req);
-  if (!userId) return res.sendStatus(403);
-
-  const { content } = req.body;
+router.get("/:postId", async (req, res) => {
   const postId = req.params.postId;
-
-  if (!content) return res.status(400).send("Content required");
 
   try {
     const result = await pool.query(
-      `INSERT INTO comments (post_id, created_by, content)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [postId, userId, content]
+      `SELECT 
+         c.comment_id,
+         c.post_id,
+         c.user_id,
+         c.content,
+         c.created_at,
+         u.username
+       FROM comments c
+       JOIN users u ON u.user_id = c.user_id
+       WHERE c.post_id = $1
+       ORDER BY c.created_at ASC`,
+      [postId]
     );
 
-    res.json(result.rows[0]);
+    res.json(result.rows);
   } catch (err) {
-    console.error("POST /comments error:", err);
+    console.error("GET /comments error:", err);
     res.sendStatus(500);
   }
 });
 
 /* ------------------------------------------
-   EDIT COMMENT
+   CREATE COMMENT
 ------------------------------------------- */
-router.put("/:commentId", async (req, res) => {
+router.post("/", async (req, res) => {
   const userId = await getUserIdFromToken(req);
   if (!userId) return res.sendStatus(403);
 
-  const { content } = req.body;
-  const commentId = req.params.commentId;
+  const { post_id, content } = req.body;
+  if (!content) return res.status(400).send("Content required");
 
   try {
-    // Check owner
-    const ownerCheck = await pool.query(
-      "SELECT created_by FROM comments WHERE id = $1",
-      [commentId]
+    const result = await pool.query(
+      `INSERT INTO comments (post_id, user_id, content)
+       VALUES ($1, $2, $3)
+       RETURNING comment_id, post_id, user_id, content, created_at`,
+      [post_id, userId, content]
     );
 
-    if (!ownerCheck.rows.length) return res.sendStatus(404);
-    if (ownerCheck.rows[0].created_by !== userId) return res.sendStatus(403);
-
-    await pool.query(
-      "UPDATE comments SET content = $1 WHERE id = $2",
-      [content, commentId]
-    );
-
-    res.send("Comment updated");
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error("PUT /comments error:", err);
+    console.error("POST /comments error:", err);
     res.sendStatus(500);
   }
 });
@@ -88,16 +83,18 @@ router.delete("/:commentId", async (req, res) => {
 
   try {
     const ownerCheck = await pool.query(
-      "SELECT created_by FROM comments WHERE id = $1",
+      "SELECT user_id FROM comments WHERE comment_id = $1",
       [commentId]
     );
 
     if (!ownerCheck.rows.length) return res.sendStatus(404);
-    if (ownerCheck.rows[0].created_by !== userId) return res.sendStatus(403);
+    if (ownerCheck.rows[0].user_id !== userId) return res.sendStatus(403);
 
-    await pool.query("DELETE FROM comments WHERE id = $1", [commentId]);
+    await pool.query("DELETE FROM comments WHERE comment_id = $1", [
+      commentId,
+    ]);
 
-    res.send("Comment deleted");
+    res.sendStatus(200);
   } catch (err) {
     console.error("DELETE /comments error:", err);
     res.sendStatus(500);

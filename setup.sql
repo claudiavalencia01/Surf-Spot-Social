@@ -59,7 +59,6 @@ CREATE TABLE post_likes (
   UNIQUE(user_id, post_id)
 );
 
-
 -- COMMENTS TABLE
 DROP TABLE IF EXISTS comments;
 CREATE TABLE comments (
@@ -70,10 +69,8 @@ CREATE TABLE comments (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Additional surf_spots metadata (keep once)
 ALTER TABLE surf_spots
   ADD COLUMN IF NOT EXISTS created_by TEXT,
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW(),
   ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'user';
-
-ALTER TABLE surf_spots 
-ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'user';
