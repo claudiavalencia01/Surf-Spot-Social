@@ -26,6 +26,12 @@ let weatherSearchResults;
 
 let searchDebounceTimer;
 
+let directionRow;
+let windSpeedChartContainer;
+let swellHeightChartContainer;
+let windSpeedChart;
+let swellHeightChart;
+
 function showLoading() {
   loading.classList.remove("hidden");
   loading.setAttribute("aria-busy", "true");
@@ -350,6 +356,12 @@ function initializeWeatherPage() {
   useLocationButton.addEventListener("click", handleUseLocationButtonClick);
   weatherSearchInput.addEventListener("input", handleSearchInputChange);
   weatherSearchButton.addEventListener("click", handleSearchButtonClick);
+
+  directionRow = document.getElementById("direction-row");
+  windSpeedChartContainer = document.getElementById("wind-speed-chart-container");
+  swellHeightChartContainer = document.getElementById("swell-height-chart-container");
+  windSpeedChart = document.getElementById("wind-speed-chart");
+  swellHeightChart = document.getElementById("swell-height-chart");
 
   clearError();
   hideLoading();

@@ -6,6 +6,10 @@ let {
   createWeatherTile
 } = wxUtils;
 
+let spotDirectionRow;
+let spotWindSpeedChart;
+let spotSwellHeightChart;
+
 // Main Function
 function loadSpotPage() {
     let spotId = window.location.pathname.split("/").pop();
@@ -74,6 +78,15 @@ function loadSpotPage() {
                     todaySummaryContainer.appendChild(createWeatherTile("Max Wind-Wave Height", `${todayMaxWindWaveFeet} ft`));
                 }
             }
+
+            // Wind and Swell Directions
+            let spotDirectionRow = document.getElementById("spot-direction-row");
+            let spotWindSpeedChart = document.getElementById("spot-wind-speed-chart");
+            let spotSwellHeightChart = document.getElementById("spot-swell-height-chart");
+
+            if (spotDirectionRow) spotDirectionRow.textContent = "";
+            if (spotWindSpeedChart) spotWindSpeedChart.textContent = "";
+            if (spotSwellHeightChart) spotSwellHeightChart.textContent = "";
 
             // 5-Day Forecast
             if (forecastContainer) {
