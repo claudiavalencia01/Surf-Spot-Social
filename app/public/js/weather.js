@@ -3,7 +3,9 @@ let {
   degreesToCompassDirection,
   formatForecastDate,
   getCurrentHourIndex,
-  createWeatherTile
+  createWeatherTile,
+  createDirectionTile,
+  renderMiniLineChart
 } = wxUtils;
 
 let UNITS = { temp: "°F", wind: "mph", waves: "m" };
@@ -25,6 +27,8 @@ let weatherSearchButton;
 let weatherSearchResults;
 
 let searchDebounceTimer;
+
+let directionRow;
 
 function showLoading() {
   loading.classList.remove("hidden");
@@ -202,6 +206,86 @@ function renderFiveDayForecast(weatherData) {
   }
 }
 
+function renderDirectionRow(weatherData) {
+  if (!directionRow) return;
+  clearElement(directionRow);
+
+  let hourly = (weatherData && weatherData.hourly) || {};
+  if (!hourly.time || !hourly.time.length) return;
+
+  let index = getCurrentHourIndex(hourly.time);
+
+  let windWaveDirDeg = (hourly.wind_wave_direction || [])[index];
+  let swellDirDeg = (hourly.wave_direction || [])[index];
+
+  let windCompass = windWaveDirDeg != null ? degreesToCompassDirection(windWaveDirDeg) : null;
+  let swellCompass = swellDirDeg != null ? degreesToCompassDirection(swellDirDeg) : null;
+
+  if (windWaveDirDeg != null) {
+    directionRow.appendChild(
+      createDirectionTile("Wind-Wave Direction", windWaveDirDeg, windCompass)
+    );
+  }
+
+  if (swellDirDeg != null) {
+    directionRow.appendChild(
+      createDirectionTile("Swell Direction", swellDirDeg, swellCompass)
+    );
+  }
+
+  if (!directionRow.hasChildNodes()) {
+    directionRow.appendChild(
+      createWeatherTile("Direction", "No direction data available.")
+    );
+  }
+}
+
+function build24HourWindowSeries(hourlyTime, values) {
+  if (!hourlyTime || !hourlyTime.length || !Array.isArray(values)) {
+    return [];
+  }
+
+  let centerIndex = getCurrentHourIndex(hourlyTime);
+  if (centerIndex < 0 || centerIndex >= hourlyTime.length) {
+    return [];
+  }
+
+  let maxLen = Math.min(hourlyTime.length, values.length);
+  if (maxLen === 0) return [];
+
+  let start = Math.max(0, centerIndex - 12);
+  let end = Math.min(maxLen - 1, centerIndex + 12); // inclusive
+
+  let series = [];
+  for (let i = start; i <= end; i++) {
+    series.push({
+      time: hourlyTime[i],
+      value: values[i]
+    });
+  }
+
+  return series;
+}
+
+let windSpeedChart = document.getElementById("wind-speed-chart");
+let swellHeightChart = document.getElementById("swell-height-chart");
+function renderTrendCharts(weatherData) {
+  if (!windSpeedChart || !swellHeightChart) return;
+
+  clearElement(windSpeedChart);
+  clearElement(swellHeightChart);
+
+  let hourly = weatherData.hourly || {};
+  if (!hourly.time) return;
+
+  let windSeries = build24HourWindowSeries(hourly.time, hourly.wind_wave_height);
+  let swellSeries = build24HourWindowSeries(hourly.time, hourly.wave_height);
+
+  renderMiniLineChart(windSpeedChart, windSeries);
+  renderMiniLineChart(swellHeightChart, swellSeries);
+}
+
+
 function fetchWeather(latitude, longitude) {
   let url = `/api/weather?lat=${latitude}&lon=${longitude}`;
 
@@ -215,12 +299,28 @@ function handleWeatherResponse(response) {
   return response.json().then(renderFetchedWeather);
 }
 
+
 function renderFetchedWeather(data) {
   console.log("Weather API data:", data);
   hideLoading();
   renderCurrentWeather(data);
   renderTodaySummary(data);
   renderFiveDayForecast(data);
+  renderDirectionRow(data);
+  renderTrendCharts(data);
+  
+  let hourly = (data && data.hourly) || {};
+  if (hourly.time && hourly.time.length &&
+      Array.isArray(hourly.wave_height) &&
+      Array.isArray(hourly.wind_wave_height)) {
+
+    let swellSeries = build24HourWindowSeries(hourly.time, hourly.wave_height);
+    let windWaveSeries = build24HourWindowSeries(hourly.time, hourly.wind_wave_height);
+
+  } else {
+    console.log("Skipping 24h series: missing time / wave arrays");
+  }
+
 }
 
 function handleWeatherError() {
@@ -350,6 +450,8 @@ function initializeWeatherPage() {
   useLocationButton.addEventListener("click", handleUseLocationButtonClick);
   weatherSearchInput.addEventListener("input", handleSearchInputChange);
   weatherSearchButton.addEventListener("click", handleSearchButtonClick);
+
+  directionRow = document.getElementById("direction-row");
 
   clearError();
   hideLoading();
