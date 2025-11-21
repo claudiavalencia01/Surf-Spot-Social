@@ -317,8 +317,6 @@ function renderFetchedWeather(data) {
     let swellSeries = build24HourWindowSeries(hourly.time, hourly.wave_height);
     let windWaveSeries = build24HourWindowSeries(hourly.time, hourly.wind_wave_height);
 
-    console.log("Swell height 24h series:", swellSeries);
-    console.log("Wind-wave height 24h series:", windWaveSeries);
   } else {
     console.log("Skipping 24h series: missing time / wave arrays");
   }
