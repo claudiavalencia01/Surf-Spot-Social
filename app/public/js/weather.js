@@ -239,6 +239,32 @@ function renderDirectionRow(weatherData) {
   }
 }
 
+function build24HourWindowSeries(hourlyTime, values) {
+  if (!hourlyTime || !hourlyTime.length || !Array.isArray(values)) {
+    return [];
+  }
+
+  let centerIndex = getCurrentHourIndex(hourlyTime);
+  if (centerIndex < 0 || centerIndex >= hourlyTime.length) {
+    return [];
+  }
+
+  let maxLen = Math.min(hourlyTime.length, values.length);
+  if (maxLen === 0) return [];
+
+  let start = Math.max(0, centerIndex - 12);
+  let end = Math.min(maxLen - 1, centerIndex + 12); // inclusive
+
+  let series = [];
+  for (let i = start; i <= end; i++) {
+    series.push({
+      time: hourlyTime[i],
+      value: values[i]
+    });
+  }
+
+  return series;
+}
 
 function fetchWeather(latitude, longitude) {
   let url = `/api/weather?lat=${latitude}&lon=${longitude}`;
@@ -261,6 +287,21 @@ function renderFetchedWeather(data) {
   renderTodaySummary(data);
   renderFiveDayForecast(data);
   renderDirectionRow(data);
+  
+  let hourly = (data && data.hourly) || {};
+  if (hourly.time && hourly.time.length &&
+      Array.isArray(hourly.wave_height) &&
+      Array.isArray(hourly.wind_wave_height)) {
+
+    let swellSeries = build24HourWindowSeries(hourly.time, hourly.wave_height);
+    let windWaveSeries = build24HourWindowSeries(hourly.time, hourly.wind_wave_height);
+
+    console.log("Swell height 24h series:", swellSeries);
+    console.log("Wind-wave height 24h series:", windWaveSeries);
+  } else {
+    console.log("Skipping 24h series: missing time / wave arrays");
+  }
+
 }
 
 function handleWeatherError() {
