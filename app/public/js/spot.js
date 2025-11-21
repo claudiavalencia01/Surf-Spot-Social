@@ -4,8 +4,28 @@ let {
   formatForecastDate,
   getCurrentHourIndex,
   createWeatherTile,
-  createDirectionTile
+  createDirectionTile,
+  renderMiniLineChart
 } = wxUtils;
+
+function build24HourWindowSeries(hourlyTime, values) {
+  if (!hourlyTime || !hourlyTime.length || !values || !values.length) {
+    return [];
+  }
+
+  let centerIndex = getCurrentHourIndex(hourlyTime);
+  let start = Math.max(0, centerIndex - 12);
+  let end = Math.min(hourlyTime.length - 1, centerIndex + 12); // inclusive
+
+  let series = [];
+  for (let i = start; i <= end; i++) {
+    series.push({
+      time: hourlyTime[i],
+      value: values[i]
+    });
+  }
+  return series;
+}
 
 // Main Function
 function loadSpotPage() {
@@ -106,6 +126,26 @@ function loadSpotPage() {
                     createWeatherTile("Direction", "No direction data available.")
                     );
                 }
+            }
+            
+            let spotWindSpeedChart = document.getElementById("spot-wind-speed-chart");
+            let spotSwellHeightChart = document.getElementById("spot-swell-height-chart");
+
+            if (spotWindSpeedChart) spotWindSpeedChart.textContent = "";
+            if (spotSwellHeightChart) spotSwellHeightChart.textContent = "";
+
+            if (hourlyData.time && hourlyData.time.length) {
+                let windSeries = build24HourWindowSeries(
+                    hourlyData.time,
+                    hourlyData.wind_wave_height || []
+                );
+                let swellSeries = build24HourWindowSeries(
+                    hourlyData.time,
+                    hourlyData.wave_height || []
+                );
+
+                renderMiniLineChart(spotWindSpeedChart, windSeries);
+                renderMiniLineChart(spotSwellHeightChart, swellSeries);
             }
 
             // 5-Day Forecast

@@ -4,7 +4,8 @@ let {
   formatForecastDate,
   getCurrentHourIndex,
   createWeatherTile,
-  createDirectionTile
+  createDirectionTile,
+  renderMiniLineChart
 } = wxUtils;
 
 let UNITS = { temp: "°F", wind: "mph", waves: "m" };
@@ -266,6 +267,25 @@ function build24HourWindowSeries(hourlyTime, values) {
   return series;
 }
 
+let windSpeedChart = document.getElementById("wind-speed-chart");
+let swellHeightChart = document.getElementById("swell-height-chart");
+function renderTrendCharts(weatherData) {
+  if (!windSpeedChart || !swellHeightChart) return;
+
+  clearElement(windSpeedChart);
+  clearElement(swellHeightChart);
+
+  let hourly = weatherData.hourly || {};
+  if (!hourly.time) return;
+
+  let windSeries = build24HourWindowSeries(hourly.time, hourly.wind_wave_height);
+  let swellSeries = build24HourWindowSeries(hourly.time, hourly.wave_height);
+
+  renderMiniLineChart(windSpeedChart, windSeries);
+  renderMiniLineChart(swellHeightChart, swellSeries);
+}
+
+
 function fetchWeather(latitude, longitude) {
   let url = `/api/weather?lat=${latitude}&lon=${longitude}`;
 
@@ -287,6 +307,7 @@ function renderFetchedWeather(data) {
   renderTodaySummary(data);
   renderFiveDayForecast(data);
   renderDirectionRow(data);
+  renderTrendCharts(data);
   
   let hourly = (data && data.hourly) || {};
   if (hourly.time && hourly.time.length &&
