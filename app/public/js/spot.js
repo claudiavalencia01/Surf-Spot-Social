@@ -3,12 +3,9 @@ let {
   degreesToCompassDirection,
   formatForecastDate,
   getCurrentHourIndex,
-  createWeatherTile
+  createWeatherTile,
+  createDirectionTile
 } = wxUtils;
-
-let spotDirectionRow;
-let spotWindSpeedChart;
-let spotSwellHeightChart;
 
 // Main Function
 function loadSpotPage() {
@@ -81,12 +78,35 @@ function loadSpotPage() {
 
             // Wind and Swell Directions
             let spotDirectionRow = document.getElementById("spot-direction-row");
-            let spotWindSpeedChart = document.getElementById("spot-wind-speed-chart");
-            let spotSwellHeightChart = document.getElementById("spot-swell-height-chart");
 
-            if (spotDirectionRow) spotDirectionRow.textContent = "";
-            if (spotWindSpeedChart) spotWindSpeedChart.textContent = "";
-            if (spotSwellHeightChart) spotSwellHeightChart.textContent = "";
+            if (spotDirectionRow) {
+                spotDirectionRow.textContent = "";
+
+                let currentIndex = getCurrentHourIndex(hourlyData.time || []);
+
+                let windWaveDirDeg = (hourlyData.wind_wave_direction || [])[currentIndex];
+                let swellDirDeg = (hourlyData.wave_direction || [])[currentIndex];
+
+                let windCompass = windWaveDirDeg != null ? degreesToCompassDirection(windWaveDirDeg) : null;
+                let swellCompass = swellDirDeg != null ? degreesToCompassDirection(swellDirDeg) : null;
+
+                if (windWaveDirDeg != null) {
+                    spotDirectionRow.appendChild(
+                    createDirectionTile("Wind-Wave Direction", windWaveDirDeg, windCompass)
+                    );
+                }
+                if (swellDirDeg != null) {
+                    spotDirectionRow.appendChild(
+                    createDirectionTile("Swell Direction", swellDirDeg, swellCompass)
+                    );
+                }
+
+                if (!spotDirectionRow.hasChildNodes()) {
+                    spotDirectionRow.appendChild(
+                    createWeatherTile("Direction", "No direction data available.")
+                    );
+                }
+            }
 
             // 5-Day Forecast
             if (forecastContainer) {

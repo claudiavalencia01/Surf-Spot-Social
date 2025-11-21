@@ -93,7 +93,7 @@ router.get("/:id", async (req, res) => {
     url.searchParams.set("longitude", spot.longitude);
     url.searchParams.set(
       "hourly",
-      "wave_height,wind_wave_height,wind_wave_direction,wind_wave_period,wind_speed_10m,wind_direction_10m"
+      "wave_height,wave_direction,wind_wave_height,wind_wave_direction,wind_wave_period,wind_speed_10m,wind_direction_10m"
     );
     url.searchParams.set(
       "daily",

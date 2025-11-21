@@ -3,7 +3,8 @@ let {
   degreesToCompassDirection,
   formatForecastDate,
   getCurrentHourIndex,
-  createWeatherTile
+  createWeatherTile,
+  createDirectionTile
 } = wxUtils;
 
 let UNITS = { temp: "°F", wind: "mph", waves: "m" };
@@ -27,10 +28,6 @@ let weatherSearchResults;
 let searchDebounceTimer;
 
 let directionRow;
-let windSpeedChartContainer;
-let swellHeightChartContainer;
-let windSpeedChart;
-let swellHeightChart;
 
 function showLoading() {
   loading.classList.remove("hidden");
@@ -208,6 +205,41 @@ function renderFiveDayForecast(weatherData) {
   }
 }
 
+function renderDirectionRow(weatherData) {
+  if (!directionRow) return;
+  clearElement(directionRow);
+
+  let hourly = (weatherData && weatherData.hourly) || {};
+  if (!hourly.time || !hourly.time.length) return;
+
+  let index = getCurrentHourIndex(hourly.time);
+
+  let windWaveDirDeg = (hourly.wind_wave_direction || [])[index];
+  let swellDirDeg = (hourly.wave_direction || [])[index];
+
+  let windCompass = windWaveDirDeg != null ? degreesToCompassDirection(windWaveDirDeg) : null;
+  let swellCompass = swellDirDeg != null ? degreesToCompassDirection(swellDirDeg) : null;
+
+  if (windWaveDirDeg != null) {
+    directionRow.appendChild(
+      createDirectionTile("Wind-Wave Direction", windWaveDirDeg, windCompass)
+    );
+  }
+
+  if (swellDirDeg != null) {
+    directionRow.appendChild(
+      createDirectionTile("Swell Direction", swellDirDeg, swellCompass)
+    );
+  }
+
+  if (!directionRow.hasChildNodes()) {
+    directionRow.appendChild(
+      createWeatherTile("Direction", "No direction data available.")
+    );
+  }
+}
+
+
 function fetchWeather(latitude, longitude) {
   let url = `/api/weather?lat=${latitude}&lon=${longitude}`;
 
@@ -221,12 +253,14 @@ function handleWeatherResponse(response) {
   return response.json().then(renderFetchedWeather);
 }
 
+
 function renderFetchedWeather(data) {
   console.log("Weather API data:", data);
   hideLoading();
   renderCurrentWeather(data);
   renderTodaySummary(data);
   renderFiveDayForecast(data);
+  renderDirectionRow(data);
 }
 
 function handleWeatherError() {
@@ -358,10 +392,6 @@ function initializeWeatherPage() {
   weatherSearchButton.addEventListener("click", handleSearchButtonClick);
 
   directionRow = document.getElementById("direction-row");
-  windSpeedChartContainer = document.getElementById("wind-speed-chart-container");
-  swellHeightChartContainer = document.getElementById("swell-height-chart-container");
-  windSpeedChart = document.getElementById("wind-speed-chart");
-  swellHeightChart = document.getElementById("swell-height-chart");
 
   clearError();
   hideLoading();

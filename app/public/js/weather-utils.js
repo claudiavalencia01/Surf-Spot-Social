@@ -45,11 +45,54 @@
         return container;
     }
 
+    function createDirectionTile(label, degrees, compassLabel) {
+        let card = document.createElement("div");
+        card.className = "rounded-xl bg-white border border-slate-200 p-4 shadow-sm flex items-center justify-between";
+
+        let text = document.createElement("div");
+
+        // Label
+        let labelElement = document.createElement("p");
+        labelElement.className = "text-xs uppercase tracking-wide text-slate-400";
+        labelElement.textContent = label;
+        text.appendChild(labelElement);
+
+        // Compass direction
+        let compass = document.createElement("p");
+        compass.className = "text-sm font-semibold text-slate-800";
+        compass.textContent = compassLabel || "—";
+        text.appendChild(compass);
+
+        // Degrees value
+        let degreesElement = document.createElement("p");
+        degreesElement.className = "text-xs text-slate-400";
+        degreesElement.textContent = degrees != null ? degrees.toFixed(0) + "°" : "";
+        text.appendChild(degreesElement);
+
+        // Arrow container and arrow symbol
+        let arrow = document.createElement("div");
+        arrow.className = "w-10 h-10 rounded-full border border-slate-300 flex items-center justify-center";
+
+        let arrowSymbol = document.createElement("span");
+        arrowSymbol.className = "block text-xl";
+        arrowSymbol.textContent = "↑";
+        arrow.appendChild(arrowSymbol);
+
+        if (degrees != null) {
+            arrow.style.transform = `rotate(${degrees}deg)`;
+        }
+
+        card.appendChild(text);
+        card.appendChild(arrow);
+
+        return card;
+    }
     window.wxUtils = {
         metersToFeet,
         degreesToCompassDirection,
         formatForecastDate,
         getCurrentHourIndex,
-        createWeatherTile
+        createWeatherTile,
+        createDirectionTile
     };
 })();
