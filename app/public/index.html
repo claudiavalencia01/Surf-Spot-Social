@@ -34,30 +34,61 @@
 <!-- HOME TAB -->
 <section id="tab-home" class="tab-panel">
   <h1 class="text-3xl font-bold mb-2">Connect. Surf. Protect.</h1>
-  <p class="text-slate-600 mb-6">Find surf spots, check live conditions, and share tips with your community.</p>
+  <p class="text-slate-600 mb-6">
+    Find surf spots, check live conditions, and share tips with your community.
+  </p>
 
-  <div class="bg-slate-200 rounded-xl h-56 mb-10 flex items-center justify-center">
-    <span class="text-slate-500">hero / map / image</span>
+  <!-- HERO IMAGE -->
+  <div id="home-hero" class="relative rounded-xl h-56 mb-10 overflow-hidden bg-slate-900">
+    <img
+      src="/assets/hero-surf.jpg"
+      alt="Surfer catching a wave"
+      class="w-full h-full object-cover opacity-80"
+>
+
+    />
+    <div class="absolute inset-0 flex flex-col items-start justify-end p-6 text-white">
+      <p class="text-xs uppercase tracking-[0.2em]">Surf Spot Social</p>
+      <h2 class="text-2xl font-semibold leading-tight">Find your next wave nearby</h2>
+      <p class="text-sm text-slate-100/80 mt-1">
+        We’ll use your location to recommend the closest surf spots.
+      </p>
+    </div>
   </div>
 
-  <h2 class="text-xl font-semibold mb-3">Community Highlights</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white rounded-xl border p-4">
-      <p class="text-sm text-slate-500">Viezh Robert</p>
-      <p class="font-semibold">Atlantic City</p>
-      <p class="text-xs mt-2 text-slate-500">Clean, 3–4 ft — everyday</p>
-    </div>
-    <div class="bg-white rounded-xl border p-4">
-      <p class="text-sm text-slate-500">Viezh Robert</p>
-      <p class="font-semibold">South Miami</p>
-      <p class="text-xs mt-2 text-slate-500">Clean, 4–6 ft</p>
-    </div>
-    <div class="bg-white rounded-xl border p-4">
-      <p class="text-sm text-slate-500">Viezh Robert</p>
-      <p class="font-semibold">Fort Lauderdale</p>
-      <p class="text-xs mt-2 text-slate-500">Choppy, 6–8 ft</p>
-    </div>
+  <!-- NEARBY SPOTS -->
+  <h2 class="text-xl font-semibold mb-1">Spots near you</h2>
+  <p id="nearby-subtitle" class="text-slate-500 text-sm mb-3">
+    Allow location access to see the closest surf spots.
+  </p>
+
+  <div id="nearby-spots" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+  <p id="nearby-error" class="text-sm text-red-600 mt-2 hidden"></p>
+</section>
+
+<!-- WEATHER TAB -->
+<section id="tab-weather" class="tab-panel hidden">
+  <h2 class="text-xl font-bold mb-4">Weather & Conditions</h2>
+
+  <div class="mb-4">
+    <form id="weather-form" class="flex gap-2">
+      <input
+        type="text"
+        id="weather-query"
+        placeholder="Enter city or surf spot"
+        class="flex-1 border rounded px-3 py-2"
+      />
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Check
+      </button>
+    </form>
   </div>
+
+  <div id="weather-results"></div>
 </section>
 
 

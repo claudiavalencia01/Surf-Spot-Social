@@ -60,6 +60,62 @@ router.get("/", async (req, res) => {
 });
 
 /**
+ * GET /api/spots/near?lat=...&lng=...&limit=5
+ * Return the closest surf spots to the user (Haversine distance)
+ */
+router.get("/near", async (req, res) => {
+  let { lat, lng, limit } = req.query;
+
+  lat = parseFloat(lat);
+  lng = parseFloat(lng);
+  limit = parseInt(limit, 10) || 6;
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return res
+      .status(400)
+      .json({ message: "lat and lng query params are required and must be numbers" });
+  }
+
+  if (limit < 1 || limit > 50) {
+    limit = 6;
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `
+      SELECT
+        id,
+        name,
+        description,
+        latitude,
+        longitude,
+        country,
+        region,
+        source,
+        /* distance in km using Haversine formula */
+        (
+          6371 * acos(
+            cos(radians($1)) * cos(radians(latitude)) *
+            cos(radians(longitude) - radians($2)) +
+            sin(radians($1)) * sin(radians(latitude))
+          )
+        ) AS distance_km
+      FROM surf_spots
+      ORDER BY distance_km ASC
+      LIMIT $3
+      `,
+      [lat, lng, limit]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("GET /api/spots/near error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+/**
  * GET /api/spots/:id
  * Get a single surf spot + live marine weather from Open-Meteo
  */
