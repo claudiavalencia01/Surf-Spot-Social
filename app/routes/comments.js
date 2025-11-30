@@ -2,20 +2,31 @@ const express = require("express");
 const router = express.Router();
 
 const pool = global.pool;
-const tokenStorage = global.tokenStorage;
 
-// Helper: get logged-in user_id
+// Helper: get logged-in user_id using DB sessions
 async function getUserIdFromToken(req) {
   const token = req.cookies.token;
-  if (!token || !(token in tokenStorage)) return null;
+  if (!token) return null;
 
-  const username = tokenStorage[token];
-  const result = await pool.query(
-    "SELECT user_id FROM users WHERE username = $1",
-    [username]
-  );
+  try {
+    const sessionRes = await pool.query(
+      "SELECT username FROM sessions WHERE token = $1",
+      [token]
+    );
+    if (!sessionRes.rows.length) return null;
 
-  return result.rows.length ? result.rows[0].user_id : null;
+    const username = sessionRes.rows[0].username;
+
+    const userRes = await pool.query(
+      "SELECT user_id FROM users WHERE username = $1",
+      [username]
+    );
+
+    return userRes.rows.length ? userRes.rows[0].user_id : null;
+  } catch (err) {
+    console.error("getUserIdFromToken comments error:", err);
+    return null;
+  }
 }
 
 /* ------------------------------------------

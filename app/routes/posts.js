@@ -5,13 +5,26 @@ const multer = require("multer");
 const path = require("path");
 
 // ----------------------
-// AUTH MIDDLEWARE
+// AUTH MIDDLEWARE (DB sessions)
 // ----------------------
-function auth(req, res, next) {
+async function auth(req, res, next) {
   const token = req.cookies.token;
-  if (!token || !global.tokenStorage[token]) return res.sendStatus(403);
-  req.username = global.tokenStorage[token];
-  next();
+  if (!token) return res.sendStatus(403);
+
+  try {
+    const sessionRes = await pool.query(
+      "SELECT username FROM sessions WHERE token = $1",
+      [token]
+    );
+
+    if (!sessionRes.rows.length) return res.sendStatus(403);
+
+    req.username = sessionRes.rows[0].username;
+    next();
+  } catch (err) {
+    console.error("posts auth error:", err);
+    res.sendStatus(500);
+  }
 }
 
 // ----------------------
