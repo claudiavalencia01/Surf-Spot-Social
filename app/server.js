@@ -6,23 +6,30 @@ const argon2 = require("argon2");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
 
-// env.json is in the ROOT folder (one level above /app)
-const env = require("../env.json");
+// Locally, load .env from project root (one level above /app)
+if (!process.env.VERCEL) {
+  require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+}
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const hostname = "localhost";
 const port = 3000;
 
-// Connect to Postgres
-const pool = new Pool(env);
+// Connect to Supabase Postgres
+const pool = new Pool({
+  connectionString: process.env.SUPABASE_POSTGRES_URL_NON_POOLING,
+  ssl: {
+    require: true,
+    rejectUnauthorized: false
+  }
+});
+
 global.pool = pool;
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-
-// ✅ FIX — define tokenStorage BEFORE loading routes
-const tokenStorage = {};
-global.tokenStorage = tokenStorage;
 
 // Cookie config
 const cookieOptions = {
@@ -97,6 +104,23 @@ function validateEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
+// Helper: get username from DB-backed session
+async function getUsernameFromToken(req) {
+  const token = req.cookies.token;
+  if (!token) return null;
+
+  try {
+    const result = await pool.query(
+      "SELECT username FROM sessions WHERE token = $1",
+      [token]
+    );
+    if (!result.rows.length) return null;
+    return result.rows[0].username;
+  } catch (err) {
+    console.error("getUsernameFromToken error:", err);
+    return null;
+  }
+}
 
 // CREATE USER
 app.post("/create", async (req, res) => {
@@ -138,8 +162,7 @@ app.post("/create", async (req, res) => {
   }
 });
 
-
-// LOGIN
+// LOGIN  ✅ writes into sessions table now
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -156,68 +179,79 @@ app.post("/login", async (req, res) => {
       return res.status(400).send("Invalid credentials");
 
     const valid = await argon2.verify(result.rows[0].password_hash, password);
-
     if (!valid)
       return res.status(400).send("Invalid credentials");
 
     const token = makeToken();
-    tokenStorage[token] = username;
 
-    res.cookie("token", token, cookieOptions)
-       .status(200)
-       .send("Logged in successfully");
+    // 🔐 store session in DB
+    await pool.query(
+      "INSERT INTO sessions (token, username) VALUES ($1, $2)",
+      [token, username]
+    );
 
+    res
+      .cookie("token", token, cookieOptions)
+      .status(200)
+      .send("Logged in successfully");
   } catch (err) {
     console.error("Login error:", err);
     res.sendStatus(500);
   }
 });
 
-
-// LOGOUT
-app.post("/logout", (req, res) => {
+// LOGOUT  ✅ removes session from DB
+app.post("/logout", async (req, res) => {
   const { token } = req.cookies;
-
-  if (!token || !(token in tokenStorage))
+  if (!token) {
     return res.status(400).send("Already logged out");
+  }
 
-  delete tokenStorage[token];
+  try {
+    await pool.query("DELETE FROM sessions WHERE token = $1", [token]);
+  } catch (err) {
+    console.error("Logout delete session error:", err);
+    // still clear cookie
+  }
 
-  res.clearCookie("token", cookieOptions)
-     .send("Logged out successfully");
+  res
+    .clearCookie("token", cookieOptions)
+    .send("Logged out successfully");
 });
 
-
-// Simple public/private routes
-const authorize = (req, res, next) => {
-  const { token } = req.cookies;
-  if (!token || !(token in tokenStorage)) return res.sendStatus(403);
+// Simple public/private routes using DB sessions
+const authorize = async (req, res, next) => {
+  const username = await getUsernameFromToken(req);
+  if (!username) return res.sendStatus(403);
+  req.username = username;
   next();
 };
 
 app.get("/public", (req, res) => res.send("A public message\n"));
 app.get("/private", authorize, (req, res) => res.send("A private message\n"));
 
-
-// DEV ONLY — legacy "/me" (still works for navbar)
-app.get("/me", (req, res) => {
-  const { token } = req.cookies;
-  if (!token || !(token in tokenStorage)) return res.json({ user: null });
-  const username = tokenStorage[token];
+// /me for navbar / frontend
+app.get("/me", async (req, res) => {
+  const username = await getUsernameFromToken(req);
+  if (!username) return res.json({ user: null });
   res.json({ user: { username } });
 });
 
-
 // Start server after DB connects
-pool.connect()
-  .then(() => {
-    console.log("Connected to database");
-    app.listen(port, hostname, () => {
-      console.log(`Server running at http://${hostname}:${port}`);
+if (process.env.VERCEL) {
+  // On Vercel: export the app, Vercel handles incoming requests
+  module.exports = app;
+} else {
+  // Local dev: connect DB and start listening
+  pool.connect()
+    .then(() => {
+      console.log("Connected to database");
+      app.listen(port, hostname, () => {
+        console.log(`Server running at http://${hostname}:${port}`);
+      });
+    })
+    .catch(err => {
+      console.error("Database connection failed:", err);
+      process.exit(1);
     });
-  })
-  .catch(err => {
-    console.error("Database connection failed:", err);
-    process.exit(1);
-  });
-
+}
