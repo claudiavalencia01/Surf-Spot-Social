@@ -204,11 +204,11 @@ let infoPanel = document.getElementById("tab-spot-info");
 let postsPanel = document.getElementById("tab-posts");
 
 function activateTab(activeButton, inactiveButton, showPanel, hidePanel) {
-    activeButton.classList.add("bg-slate-900", "text-white");
+    activeButton.classList.add("bg-sky-600", "text-white");
     activeButton.classList.remove("text-slate-600", "hover:bg-slate-50");
     activeButton.setAttribute("aria-selected", "true");
 
-    inactiveButton.classList.remove("bg-slate-900", "text-white");
+    inactiveButton.classList.remove("bg-sky-600", "text-white");
     inactiveButton.classList.add("text-slate-600", "hover:bg-slate-50");
     inactiveButton.setAttribute("aria-selected", "false");
 
