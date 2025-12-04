@@ -4,6 +4,7 @@
     "start": "cd app; node server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.86.2",
     "argon2": "^0.30.3",
     "axios": "^1.13.1",
     "cookie-parser": "^1.4.6",

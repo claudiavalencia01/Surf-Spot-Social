@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = global.pool;
 const multer = require("multer");
 const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
 
 // ----------------------
 // AUTH MIDDLEWARE (DB sessions)
@@ -27,21 +28,17 @@ async function auth(req, res, next) {
   }
 }
 
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || "post-images";
+
 // ----------------------
 // MULTER SETUP
 // ----------------------
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../uploads"));
-  },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, unique + ext);
-  },
-});
-
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ----------------------
 // GET ALL POSTS
@@ -107,7 +104,31 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
   );
   const user_id = userRes.rows[0].user_id;
 
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  let image_url = null;
+
+  if (req.file) {
+    const ext = path.extname(req.file.originalname) || "";
+    const filename =
+      `post-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+
+    const { error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Supabase upload error:", error);
+      return res.status(500).send("Failed to upload image");
+    }
+
+    const { data } = supabase.storage
+      .from(SUPABASE_BUCKET)
+      .getPublicUrl(filename);
+
+    image_url = data.publicUrl;
+  }
 
   await pool.query(
     `
@@ -142,7 +163,31 @@ router.put("/:id", auth, upload.single("image"), async (req, res) => {
 
   if (owner !== user_id) return res.sendStatus(403);
 
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  let new_image_url = null;
+
+  if (req.file) {
+    const ext = path.extname(req.file.originalname) || "";
+    const filename =
+      `post-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+
+    const { error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Supabase upload error (edit):", error);
+      return res.status(500).send("Failed to upload image");
+    }
+
+    const { data } = supabase.storage
+      .from(SUPABASE_BUCKET)
+      .getPublicUrl(filename);
+
+    new_image_url = data.publicUrl;
+  }
 
   await pool.query(
     `
@@ -151,7 +196,7 @@ router.put("/:id", auth, upload.single("image"), async (req, res) => {
         image_url = COALESCE($4, image_url)
     WHERE post_id=$5
     `,
-    [title, content, spot_id || null, image_url, req.params.id]
+    [title, content, spot_id || null, new_image_url, req.params.id]
   );
 
   res.sendStatus(200);
