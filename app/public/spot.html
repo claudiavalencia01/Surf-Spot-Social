@@ -30,8 +30,9 @@
         Spot Details
       </button>
       <button id="tab-button-posts" class="flex-1 rounded-full py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition focus:outline-none" role="tab" aria-selected="false" aria-controls="tab-posts">
-        Posts
+        Tips
       </button>
+      
     </div>
 
     <!-- tab content -->
@@ -68,21 +69,43 @@
       <!-- 5-day forecast -->
       <h3 class="text-lg font-medium text-slate-700 mb-2 mt-12 border-b border-slate-200 pb-1">5 Day Forecast</h3>
       <div id="forecast-strip" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
-
-      <!-- tips card -->
-      <div id="tips-card" class="mt-8 rounded-2xl bg-slate-100 p-6">
-        <h3 class="font-semibold">Tips From Other Surfers</h3>
-        <p class="text-slate-500 mt-2" id="tips-empty">No tips yet — be the first to share one.</p>
+    </section>
+    
+    <section id="tab-posts" hidden>
+      <div class="mt-8 rounded-2xl bg-white/90 shadow-lg shadow-sky-100 border border-sky-100 p-6 space-y-4">
+        <h2 class="text-xl font-semibold text-slate-900">Spot Tips</h2>
+    
+        <!-- original tip that was saved as surf_spots.description -->
+        <div id="spot-creator-tip" class="hidden rounded-xl bg-slate-50 p-4 text-sm text-slate-800"></div>
+    
+        <!-- list of extra tips from users -->
+        <div id="tips-list" class="space-y-3"></div>
+        <p id="tips-empty" class="text-sm text-slate-500">
+          No extra tips yet. Be the first to share one!
+        </p>
+    
+        <!-- add tip form -->
+        <div id="tips-form-wrapper" class="border-t border-slate-200 pt-4 mt-4">
+          <label for="new-tip" class="block text-sm font-medium mb-1">Add a tip</label>
+          <textarea
+            id="new-tip"
+            rows="3"
+            class="w-full border rounded px-3 py-2 text-sm mb-2"
+            placeholder="Share local knowledge, hazards, parking, crowds..."
+          ></textarea>
+          <button
+            id="submit-tip"
+            class="bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded"
+          >
+            Post Tip
+          </button>
+          <p id="tips-login-hint" class="text-xs text-slate-500 mt-2 hidden">
+            You need to be logged in to add tips.
+          </p>
+        </div>
       </div>
     </section>
     
-    <section id="tab-posts" hidden class="mt-8">
-      <div class="rounded-2xl border border-slate-200 bg-white/90 p-6">
-        <p class="text-sm text-slate-500">
-          Check the main Community Posts tab to join the conversation for this surf region.
-        </p>
-      </div>
-    </section>
 
 
     <div id="mini-map" class="h-[320px] rounded-2xl border border-sky-100 bg-white/70"></div>

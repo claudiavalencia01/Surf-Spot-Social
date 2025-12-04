@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
   
             card.addEventListener("click", () => {
-              window.location.href = `/spot.html?id=${spot.id}`;
+                window.location.href = `/spots/${spot.id}`;
             });
   
             nearbyContainer.appendChild(card);
