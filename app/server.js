@@ -35,29 +35,11 @@ function deriveProjectRef() {
 }
 
 function resolveConnectionString() {
-  const explicit = process.env.SUPABASE_POSTGRES_URL_NON_POOLING || process.env.SUPABASE_POSTGRES_URL;
-  if (!explicit) return null;
-
-  try {
-    const parsed = new URL(explicit);
-    const isPooler = parsed.hostname.includes("pooler.supabase.com");
-
-    if (isPooler) {
-      const projectRef = deriveProjectRef();
-      const password = process.env.SUPABASE_POSTGRES_PASSWORD || decodeURIComponent(parsed.password || "");
-
-      if (projectRef && password) {
-        console.warn(
-          "[database] SUPABASE_POSTGRES_URL_NON_POOLING points to PgBouncer. Rewriting to direct connection for this server."
-        );
-        return `postgresql://postgres:${encodeURIComponent(password)}@db.${projectRef}.supabase.co:5432/postgres`;
-      }
-    }
-  } catch (_) {
-    return explicit;
-  }
-
-  return explicit;
+  return (
+    process.env.SUPABASE_POSTGRES_URL_NON_POOLING ||
+    process.env.SUPABASE_POSTGRES_URL ||
+    null
+  );
 }
 
 const connectionString = resolveConnectionString();
