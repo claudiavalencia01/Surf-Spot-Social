@@ -16,13 +16,53 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const hostname = "localhost";
 const port = 3000;
 
+function deriveProjectRef() {
+  if (process.env.SUPABASE_PROJECT_REF) return process.env.SUPABASE_PROJECT_REF;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.SUPABASE_PUBLIC_SUPABASE_URL;
+  if (supabaseUrl) {
+    return supabaseUrl.replace(/^https?:\/\/|\.supabase\.co.*$/g, "");
+  }
+  const raw = process.env.SUPABASE_POSTGRES_URL_NON_POOLING || process.env.SUPABASE_POSTGRES_URL;
+  try {
+    if (raw) {
+      const parsed = new URL(raw);
+      if (parsed.username.startsWith("postgres.")) {
+        return parsed.username.split(".")[1];
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+function resolveConnectionString() {
+  return (
+    process.env.SUPABASE_POSTGRES_URL_NON_POOLING ||
+    process.env.SUPABASE_POSTGRES_URL ||
+    null
+  );
+}
+
+const connectionString = resolveConnectionString();
+
+if (!connectionString) {
+  throw new Error("Missing Supabase connection string. Set SUPABASE_POSTGRES_URL_NON_POOLING.");
+}
+
+let sslConfig = undefined;
+try {
+  const { hostname: dbHost } = new URL(connectionString);
+  const needsSSL = !["localhost", "127.0.0.1"].includes(dbHost);
+  if (needsSSL) {
+    sslConfig = { require: true, rejectUnauthorized: false };
+  }
+} catch (_) {
+  sslConfig = { require: true, rejectUnauthorized: false };
+}
+
 // Connect to Supabase Postgres
 const pool = new Pool({
-  connectionString: process.env.SUPABASE_POSTGRES_URL_NON_POOLING,
-  ssl: {
-    require: true,
-    rejectUnauthorized: false
-  }
+  connectionString,
+  ssl: sslConfig,
 });
 
 global.pool = pool;

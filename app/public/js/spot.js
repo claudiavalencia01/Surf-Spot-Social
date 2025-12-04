@@ -409,23 +409,22 @@ let {
             content,
           }),
         });
-  
         if (!res.ok) {
-          if (res.status === 403) {
-            alert("You must be logged in to add a tip.");
-            return;
-          }
-          throw new Error("Failed to save tip");
+        if (res.status === 403) {
+          alert("You must be logged in to add a tip.");
+          return;
         }
-  
-        textarea.value = "";
-        await loadSpotTips(currentSpotId);
-      } catch (e) {
-        console.error("add tip error", e);
-        alert("Could not save tip. Please try again.");
+        throw new Error("Failed to save tip");
       }
-    };
-  }
+
+      textarea.value = "";
+      await loadSpotTips(currentSpotId);
+    } catch (e) {
+      console.error("add tip error", e);
+      alert("Could not save tip. Please try again.");
+    }
+  };
+}
   
   function attachDeleteTipHandlers() {
     document.querySelectorAll(".delete-tip").forEach((btn) => {
@@ -459,11 +458,11 @@ let {
   let postsPanel = document.getElementById("tab-posts");
   
   function activateTab(activeButton, inactiveButton, showPanel, hidePanel) {
-    activeButton.classList.add("bg-slate-900", "text-white");
+    activeButton.classList.add("bg-sky-600", "text-white");
     activeButton.classList.remove("text-slate-600", "hover:bg-slate-50");
     activeButton.setAttribute("aria-selected", "true");
   
-    inactiveButton.classList.remove("bg-slate-900", "text-white");
+    inactiveButton.classList.remove("bg-sky-600", "text-white");
     inactiveButton.classList.add("text-slate-600", "hover:bg-slate-50");
     inactiveButton.setAttribute("aria-selected", "false");
   
@@ -494,7 +493,7 @@ let {
     setupTabs();
     setupTipsAuthState();
     loadSpotPage();
-  }
-  
-  window.addEventListener("DOMContentLoaded", initializeSpotPage);
-  
+}
+
+
+window.addEventListener("DOMContentLoaded", initializeSpotPage);

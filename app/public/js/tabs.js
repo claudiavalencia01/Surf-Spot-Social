@@ -13,10 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // active styles on tabs
     tabLinks.forEach(link => {
       if (link.dataset.tab === tabName) {
-        link.classList.add("text-slate-900", "border-slate-900", "font-medium");
+        link.classList.add("text-sky-700", "border-sky-500", "font-semibold");
         link.classList.remove("text-slate-500");
       } else {
-        link.classList.remove("text-slate-900", "border-slate-900", "font-medium");
+        link.classList.remove("text-sky-700", "border-sky-500", "font-semibold");
         link.classList.add("text-slate-500");
       }
     });

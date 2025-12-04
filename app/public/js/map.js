@@ -3,14 +3,19 @@
   // 1. Init map
   const map = L.map("map").setView([35.4, -75.6], 3); // world-ish view
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 18,
-    attribution: "&copy; OpenStreetMap",
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap & contributors, © CARTO",
   }).addTo(map);
 
   // Layer group so we can clear/re-render markers
   const markersLayer = L.layerGroup().addTo(map);
+  const userLayer = L.layerGroup().addTo(map);
   let allSpots = [];
+
+  const visibleCountEl = document.getElementById("visible-spot-count");
+  const totalCountEl = document.getElementById("total-spot-count");
+  const locationStatusEl = document.getElementById("user-location-status");
 
   // 2. Fix map sizing when switching tabs or resizing window
   const fixMapSize = () => map.invalidateSize(true);
@@ -22,18 +27,64 @@
   });
   window.addEventListener("resize", fixMapSize);
 
+  const mapWrapper = document.querySelector(".map-wrapper");
+  if (mapWrapper && window.ResizeObserver) {
+    const observer = new ResizeObserver(() => fixMapSize());
+    observer.observe(mapWrapper);
+  }
+
+  function updateVisibleCount(count) {
+    if (visibleCountEl) visibleCountEl.textContent = count;
+  }
+
+  function updateTotalCount(count) {
+    if (totalCountEl) totalCountEl.textContent = count;
+  }
+
+  function updateLocationStatus(message) {
+    if (locationStatusEl) locationStatusEl.textContent = message;
+  }
+
   // 3. Try to center map on user's current location
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
         map.setView([latitude, longitude], 8);
+
+        userLayer.clearLayers();
+        const accuracy = Math.min(Math.max(pos.coords.accuracy || 4000, 500), 20000);
+        L.circle([latitude, longitude], {
+          radius: accuracy,
+          color: "#0ea5e9",
+          weight: 1,
+          fillOpacity: 0.08,
+          fillColor: "#38bdf8",
+        }).addTo(userLayer);
+
+        L.circleMarker([latitude, longitude], {
+          radius: 8,
+          color: "#0ea5e9",
+          weight: 2,
+          fillColor: "#0284c7",
+          fillOpacity: 0.9,
+        })
+          .addTo(userLayer)
+          .bindPopup("You're here")
+          .openPopup();
+
+        updateLocationStatus(
+          `Locked near ${latitude.toFixed(2)}, ${longitude.toFixed(2)} (zoomed to your coast)`
+        );
       },
       (err) => {
         console.warn("Geolocation error:", err.message);
         // keep default if denied/fails
+        updateLocationStatus("We couldn't access your location — use the search above to explore.");
       }
     );
+  } else {
+    updateLocationStatus("Location unavailable on this device. Use the search bar to explore.");
   }
 
   // ---- Helpers for editing & deleting ----
@@ -159,6 +210,8 @@
       }
     }
 
+    updateVisibleCount(spots.length);
+
     if (fit && bounds.length) {
       map.fitBounds(bounds, { padding: [20, 20] });
       fixMapSize();
@@ -226,12 +279,13 @@
     if (!res.ok) throw new Error(`Failed to load spots: ${res.status}`);
 
     const spots = await res.json();
-    console.log("spots:", spots.length, spots[0]);
-
     allSpots = spots;
+    updateTotalCount(spots.length);
+    updateVisibleCount(spots.length);
     renderSpots(allSpots, { fit: true }); // only time we auto-fit all markers
   } catch (err) {
     console.error("Error loading spots:", err);
+    updateLocationStatus("Unable to load surf spots right now.");
   }
 
   // 8. Search bar: filter spots live as you type, NO map movement
