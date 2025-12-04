@@ -89,7 +89,6 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-
 // Cookie config
 const cookieOptions = {
   httpOnly: true,
@@ -107,10 +106,6 @@ app.use("/api/geocode", require("./routes/geocode"));
 app.use("/api/users", require("./routes/users"));   // profile routes
 app.use("/api/posts", require("./routes/posts"));
 app.use("/api/comments", require("./routes/comments"));
-
-const spotTipsRouter = require("./routes/spotTips");
-app.use("/api/spot-tips", spotTipsRouter);
-
 
 
 // --- IMAGE UPLOADS FOLDER ---

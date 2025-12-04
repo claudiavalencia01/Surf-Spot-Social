@@ -1,7 +1,6 @@
 // app/db/index.js
 const { Pool } = require("pg");
 const path = require("path");
-
 let config;
 
 // Prefer DATABASE_URL if present (useful for deploys), otherwise env.json
@@ -24,5 +23,4 @@ if (process.env.DATABASE_URL) {
 }
 
 const pool = new Pool(config);
-
 module.exports = pool;
