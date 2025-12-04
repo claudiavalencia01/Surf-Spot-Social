@@ -464,6 +464,20 @@ let {
     activeButton.setAttribute("aria-selected", "true");
   
     inactiveButton.classList.remove("bg-slate-900", "text-white");
+}
+
+// Tabs Functionality
+let infoButton = document.getElementById("tab-button-info");
+let postsButton = document.getElementById("tab-button-posts");
+let infoPanel = document.getElementById("tab-spot-info");
+let postsPanel = document.getElementById("tab-posts");
+
+function activateTab(activeButton, inactiveButton, showPanel, hidePanel) {
+    activeButton.classList.add("bg-sky-600", "text-white");
+    activeButton.classList.remove("text-slate-600", "hover:bg-slate-50");
+    activeButton.setAttribute("aria-selected", "true");
+
+    inactiveButton.classList.remove("bg-sky-600", "text-white");
     inactiveButton.classList.add("text-slate-600", "hover:bg-slate-50");
     inactiveButton.setAttribute("aria-selected", "false");
   
@@ -494,7 +508,7 @@ let {
     setupTabs();
     setupTipsAuthState();
     loadSpotPage();
-  }
-  
-  window.addEventListener("DOMContentLoaded", initializeSpotPage);
-  
+}
+
+
+window.addEventListener("DOMContentLoaded", initializeSpotPage);

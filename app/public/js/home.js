@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement("button");
             card.type = "button";
             card.className =
-              "text-left bg-white rounded-xl border p-4 hover:shadow-md hover:border-slate-300 transition";
+              "text-left bg-white/90 rounded-2xl border border-sky-100 p-4 shadow-sm hover:shadow-xl hover:-translate-y-0.5 hover:border-sky-300 transition";
   
             const locationLabel = spot.region || spot.country || "Nearby surf spot";
             const description =

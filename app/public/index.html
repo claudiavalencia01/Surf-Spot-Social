@@ -10,96 +10,134 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gradient-to-b from-sky-50 via-white to-white min-h-screen text-slate-900">
 
-<header class="border-b bg-white">
-  <div class="max-w-6xl mx-auto flex items-center justify-between h-14 px-4">
+<header class="border-b border-slate-200 bg-white/90 backdrop-blur sticky top-0 z-40">
+  <div class="max-w-6xl mx-auto flex items-center justify-between h-16 px-4">
     <div class="flex items-center gap-2">
-      <span class="font-semibold tracking-wide uppercase">SURFSPOT</span>
+      <span class="font-semibold tracking-wide uppercase text-sky-700">SurfSpot Social</span>
+      <span class="hidden sm:inline text-[11px] tracking-[0.3em] text-slate-400 uppercase">Connected coastline</span>
     </div>
 
-    <nav class="flex items-center gap-6 text-sm" id="main-tabs">
-      <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300" data-tab="home">Home</button>
-      <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300" data-tab="weather">WEATHER &amp; FORECAST</button>
-      <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300" data-tab="map">MAP</button>
-      <button class="tab-link py-1 border-b-2 border-transparent hover:border-slate-300" data-tab="posts">POSTS</button>
+    <nav class="flex items-center gap-3 text-sm text-slate-500" id="main-tabs">
+      <button class="tab-link px-3 py-1.5 border-b-2 border-transparent rounded-full hover:text-slate-900 hover:border-sky-200 transition" data-tab="home">Home</button>
+      <button class="tab-link px-3 py-1.5 border-b-2 border-transparent rounded-full hover:text-slate-900 hover:border-sky-200 transition" data-tab="weather">Weather &amp; Forecast</button>
+      <button class="tab-link px-3 py-1.5 border-b-2 border-transparent rounded-full hover:text-slate-900 hover:border-sky-200 transition" data-tab="map">Map</button>
+      <button class="tab-link px-3 py-1.5 border-b-2 border-transparent rounded-full hover:text-slate-900 hover:border-sky-200 transition" data-tab="posts">Posts</button>
     </nav>
 
-    <div id="auth-section" class="flex gap-3 text-sm"></div>
+    <div id="auth-section" class="flex gap-3 text-sm items-center"></div>
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+<main class="max-w-6xl mx-auto px-4 py-8 space-y-10">
 
 <!-- HOME TAB -->
 <section id="tab-home" class="tab-panel">
-  <h1 class="text-3xl font-bold mb-2">Connect. Surf. Protect.</h1>
-  <p class="text-slate-600 mb-6">
-    Find surf spots, check live conditions, and share tips with your community.
-  </p>
+  <div class="grid gap-8 lg:grid-cols-[1.05fr,0.95fr] items-center">
+    <div class="space-y-6">
+      <span class="inline-flex items-center gap-2 rounded-full bg-sky-100 text-sky-800 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+        Live coastal network
+      </span>
 
-  <!-- HERO IMAGE -->
-  <div id="home-hero" class="relative rounded-xl h-56 mb-10 overflow-hidden bg-slate-900">
-    <img
-      src="/assets/hero-surf.jpg"
-      alt="Surfer catching a wave"
-      class="w-full h-full object-cover opacity-80"
->
+      <div>
+        <h1 class="text-4xl sm:text-5xl font-bold leading-tight">Connect. Surf. Protect.</h1>
+        <p class="text-slate-600 mt-4 text-lg max-w-2xl">
+          Discover clean surf spots, monitor weather swings, and swap knowledge with surfers nearby —
+          all in one calm, blue-forward workspace.
+        </p>
+      </div>
 
-    />
-    <div class="absolute inset-0 flex flex-col items-start justify-end p-6 text-white">
-      <p class="text-xs uppercase tracking-[0.2em]">Surf Spot Social</p>
-      <h2 class="text-2xl font-semibold leading-tight">Find your next wave nearby</h2>
-      <p class="text-sm text-slate-100/80 mt-1">
-        We’ll use your location to recommend the closest surf spots.
-      </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="/?tab=map" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 px-6 py-3 text-white font-semibold shadow-lg shadow-sky-200/60 hover:shadow-xl transition">
+          Explore interactive map
+          <span aria-hidden="true">→</span>
+        </a>
+        <a href="/?tab=weather" class="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sky-700 font-semibold border border-sky-200 hover:border-sky-400 transition">
+          Check forecast
+        </a>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 max-w-xl">
+        <div class="glass-panel p-4">
+          <p class="text-xs uppercase text-slate-500 tracking-[0.2em]">Verified Spots</p>
+          <p class="text-3xl font-semibold mt-1 text-slate-900">80+</p>
+          <p class="text-sm text-slate-500">curated by the SurfSpot crew</p>
+        </div>
+        <div class="glass-panel p-4">
+          <p class="text-xs uppercase text-slate-500 tracking-[0.2em]">Community Tips</p>
+          <p class="text-3xl font-semibold mt-1 text-slate-900">100s</p>
+          <p class="text-sm text-slate-500">of in-water notes &amp; reports</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO IMAGE -->
+    <div id="home-hero" class="relative rounded-[32px] h-64 sm:h-80 lg:h-[360px] overflow-hidden glass-panel">
+      <img
+        src="/assets/hero-surf.jpg"
+        alt="Surfer catching a wave"
+        class="w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"></div>
+      <div class="absolute inset-0 flex flex-col items-start justify-end p-8 text-white space-y-2">
+        <p class="text-xs uppercase tracking-[0.3em] text-slate-100/80">SurfSpot Social</p>
+        <h2 class="text-3xl font-semibold leading-tight">Find your next wave nearby.</h2>
+        <p class="text-sm text-slate-100/80">
+          Enable location access and we will surface the closest verified spots instantly.
+        </p>
+      </div>
     </div>
   </div>
 
   <!-- NEARBY SPOTS -->
-  <h2 class="text-xl font-semibold mb-1">Spots near you</h2>
-  <p id="nearby-subtitle" class="text-slate-500 text-sm mb-3">
-    Allow location access to see the closest surf spots.
-  </p>
+  <div class="mt-12 border-t border-slate-200 pt-8 space-y-3">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div>
+        <h2 class="text-2xl font-semibold">Spots near you</h2>
+        <p id="nearby-subtitle" class="text-slate-500 text-sm">
+          Allow location access to see the closest surf spots.
+        </p>
+      </div>
+      <p class="text-xs uppercase text-slate-400 tracking-[0.3em]">Updated hourly</p>
+    </div>
 
-  <div id="nearby-spots" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    <div id="nearby-spots" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-  <p id="nearby-error" class="text-sm text-red-600 mt-2 hidden"></p>
+    <p id="nearby-error" class="text-sm text-red-600 hidden"></p>
+  </div>
 </section>
 
 <!-- WEATHER TAB -->
 <section id="tab-weather" class="tab-panel hidden">
-  <h2 class="text-xl font-bold mb-4">Weather & Conditions</h2>
-
-  <div class="mb-4">
-    <form id="weather-form" class="flex gap-2">
-      <input
-        type="text"
-        id="weather-query"
-        placeholder="Enter city or surf spot"
-        class="flex-1 border rounded px-3 py-2"
-      />
-      <button
-        type="submit"
-        class="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Check
-      </button>
-    </form>
+  <div class="flex flex-col gap-2">
+    <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Forecast studio</p>
+    <h2 class="text-3xl font-semibold">Weather &amp; Forecast</h2>
+    <p class="text-slate-500 max-w-2xl">
+      Real-time marine data, plus tide, swell, and wind trends built specifically for surfers.
+    </p>
   </div>
 
-  <div id="weather-results"></div>
-</section>
-
-
-<!-- WEATHER TAB -->
-<section id="tab-weather" class="tab-panel hidden">
-  <h2 class="text-2xl font-semibold mb-4">Weather &amp; Forecast</h2>
-
-  <div id="weather-search" class="flex flex-row items-center gap-2 w-full mb-4">
-    <input id="weather-search-input" type="text" placeholder="Search for a beach or location" class="flex-[2] px-4 py-2 rounded-full border" />
-    <button id="weather-search-btn" class="px-4 py-2 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition">Search</button>
-    <button id="use-location-btn" class="px-4 py-2 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition">Use My Location</button>
+  <div id="weather-search" class="flex flex-col md:flex-row md:items-center gap-3 w-full mt-6 mb-6">
+    <input
+      id="weather-search-input"
+      type="text"
+      placeholder="Search for a beach or location"
+      class="flex-1 px-5 py-3 rounded-full border border-sky-100 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-200"
+    />
+    <button
+      id="weather-search-btn"
+      class="px-6 py-3 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white font-semibold shadow hover:shadow-lg transition"
+    >
+      Search
+    </button>
+    <button
+      id="use-location-btn"
+      class="px-6 py-3 rounded-full border border-sky-200 text-sky-700 font-semibold bg-white hover:border-sky-400 transition"
+    >
+      Use My Location
+    </button>
   </div>
 
   <div>
@@ -109,7 +147,7 @@
     <p id="observed-time" class="text-slate-500"></p>
   </div>
 
-  <div id="weather-search-results" class="mt-2 rounded-xl border border-slate-200 bg-white shadow-sm hidden"></div>
+  <div id="weather-search-results" class="mt-2 rounded-2xl border border-slate-200 bg-white shadow-lg hidden"></div>
 
   <h3 class="text-lg font-medium text-slate-800 mt-6 mb-2">Current Conditions</h3>
   <div id="current-weather-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
@@ -136,33 +174,94 @@
     </div>
   </div>
 
-  <div id="loading" class="hidden mt-6 text-slate-600">Loading…</div>
-  <div id="error" class="hidden mt-2 text-red-600"></div>
+  <div id="loading" class="hidden mt-6 text-slate-600 text-sm">Loading…</div>
+  <div id="error" class="hidden mt-2 text-red-600 text-sm"></div>
 </section>
 
 
 <!-- MAP TAB (CLEAN, FINAL VERSION) -->
 <section id="tab-map" class="tab-panel hidden">
-  <h2 class="text-2xl font-semibold mb-4">Surf Spots Map</h2>
+  <div class="flex flex-col gap-6">
+    <div class="space-y-3">
+      <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Live atlas</p>
+      <h2 class="text-3xl font-semibold">Surf Spots Map</h2>
+      <p class="text-slate-500 max-w-3xl">
+        Filter the map to reveal vetted surf spots, then click any marker to open the dedicated spot page.
+        Drop a new marker anywhere along the coast to share your local intelligence.
+      </p>
+    </div>
 
-  <input
-    id="spot-search"
-    type="text"
-    placeholder="Search by beach or location"
-    class="w-full mb-4 px-4 py-2 rounded-full border"
-  />
+    <div class="flex flex-col lg:flex-row gap-6 items-start">
+      <div class="flex-1 w-full space-y-4">
+        <label for="spot-search" class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+          Search the coastline
+        </label>
+        <div class="map-toolbar flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            id="spot-search"
+            type="text"
+            placeholder="Search by beach, state, or country"
+            class="flex-1 px-5 py-3 rounded-full border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-200"
+          />
+          <p class="text-xs text-slate-500 px-3">Press Enter to fly to the search result.</p>
+        </div>
 
-  <div class="map-wrapper w-full h-[450px] rounded-xl overflow-hidden">
-    <div id="map" class="w-full h-full"></div>
+        <div class="map-wrapper">
+          <div id="map"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="map-stat-card">
+            <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Visible Spots</p>
+            <p id="visible-spot-count" class="text-3xl font-semibold mt-1 text-slate-900">0</p>
+            <p class="text-sm text-slate-500">Filtered by your search</p>
+          </div>
+          <div class="map-stat-card">
+            <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Global Inventory</p>
+            <p id="total-spot-count" class="text-3xl font-semibold mt-1 text-slate-900">0</p>
+            <p class="text-sm text-slate-500">Surf spots in SurfSpot Social</p>
+          </div>
+        </div>
+        <p id="user-location-status" class="text-sm text-slate-500">Looking for your location…</p>
+      </div>
+
+      <div class="w-full lg:w-80 space-y-4">
+        <div class="glass-panel p-6 space-y-4">
+          <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Quick tips</p>
+          <ul class="text-sm text-slate-600 space-y-2 list-disc pl-5">
+            <li>Tap a marker to open a spot page with live stats.</li>
+            <li>Click directly on the map to submit a new surf spot.</li>
+            <li>Use the Posts tab to ask questions or share a photo.</li>
+          </ul>
+        </div>
+
+        <div class="glass-panel p-6 space-y-3">
+          <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Need inspiration?</p>
+          <p class="text-slate-600">
+            Open the Weather tab for a detailed swell + wind breakdown, then come back to the map to plan your session.
+          </p>
+          <a href="/?tab=weather" class="inline-flex items-center gap-2 text-sky-700 font-semibold hover:text-sky-900 transition">
+            Launch forecast studio <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
 
 <!-- POSTS TAB -->
 <section id="tab-posts" class="tab-panel hidden">
-  <h2 class="text-2xl font-semibold mb-4">Community Posts</h2>
+  <div class="space-y-2 mb-6">
+    <p class="text-sm uppercase tracking-[0.35em] text-slate-400">Crew feed</p>
+    <h2 class="text-3xl font-semibold">Community Posts</h2>
+    <p class="text-slate-500">Celebrate clean swells, call attention to hazards, and log local knowledge.</p>
+  </div>
 
-  <button id="open-create-post" class="mb-4 px-4 py-2 bg-blue-600 text-white rounded">
+  <button
+    id="open-create-post"
+    class="mb-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white font-semibold shadow hover:shadow-lg transition"
+  >
     Create New Post
   </button>
 
