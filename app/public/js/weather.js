@@ -27,6 +27,7 @@ let weatherSearchButton;
 let weatherSearchResults;
 
 let searchDebounceTimer;
+let suppressSearch = false;
 
 let directionRow;
 
@@ -359,6 +360,11 @@ function processPositionError() {
 }
 
 function handleSearchInputChange() {
+  if (suppressSearch) {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    return;
+  }
+
   let value = weatherSearchInput.value.trim();
   if (value.length < 2) {
     weatherSearchResults.classList.add("hidden");
@@ -409,7 +415,9 @@ function addSearchResult(place) {
 
 function selectSearchResult(place) {
   let label = `${place.name}, ${place.region || ""}, ${place.country || ""}`;
+  suppressSearch = true;
   weatherSearchInput.value = label;
+  suppressSearch = false;
 
   clearElement(weatherSearchResults);
   weatherSearchResults.classList.add("hidden");
